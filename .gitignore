@@ -1,0 +1,9 @@
+*.pyc
+*.plog
+*.db
+
+*.swp
+
+pvs_plogs/
+pvs_reports/
+temp/
