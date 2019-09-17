@@ -4,6 +4,7 @@ import ap_config
 import re
 import time
 import sqlite3
+from ap_sqlite3 import EasySqlite
 
 class PVSStudioHandler:
     def __init__(self, *args, **kwargs):
@@ -72,8 +73,7 @@ class PVSStudioHandler:
 
     def __gen_plog(self):
         os.system("if not exist {0} mkdir {0}".format(ap_config.get_dir_pvs_plogs()))
-        db_connect = sqlite3.connect('test.db')
-        cur = db_connect.cursor()
+        db = EasySqlite('test.db')
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
             for file in filenames:
                 file_path = os.path.join(parent, file)
@@ -109,9 +109,7 @@ class PVSStudioHandler:
                 #     print("LicenseRenewal")
 
                 if ret == 0:
-                    continue
+                    output_file_path = ""
 
                 revision = int(filename[1:])
-                cur.execute("insert or replace into reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path))
-                db_connect.commit()
-        db_connect.close()
+                db.execute("insert or replace into reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path), [], False, True)

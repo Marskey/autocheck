@@ -22,25 +22,26 @@ def do_check(rev_start, rev_end):
 def get_revisions_list(offset, count):
     code_checker = PVSStudioHandler()
 
-    db_connect = sqlite3.connect('test.db')
-    cur = db_connect.cursor()
+    db = EasySqlite('test.db')
     rev_list = {}
-    for row in cur.execute("select * from reports limit {0}, {1}".format(offset, count)):
+    for row in db.execute("select * from reports limit {0}, {1}".format(offset, count), [], False, False):
         revision = row[0]
         plog_file_path = row[1]
-        if not os.path.exists(plog_file_path):
-            do_check(revision, revision)
-
-        report_file_path = "{0}\\r{1}.html".format(ap_config.get_dir_pvs_report(), revision)
-        if not os.path.exists(report_file_path):
-            revs = []
-            revs.append(revision)
-            code_checker.convert_to_html(revs)
         str_time = row[2]
+
+        report_file_path = ""
+        if not plog_file_path == "":
+            if not os.path.exists(plog_file_path): 
+                do_check(revision, revision)
+
+            report_file_path = "{0}\\r{1}.html".format(ap_config.get_dir_pvs_report(), revision)
+            if not os.path.exists(report_file_path):
+                revs = []
+                revs.append(revision)
+                code_checker.convert_to_html(revs)
+
         rev_list[revision] = {"rev": "r{0}".format(revision), "time": str_time, "report_path": report_file_path}
 
-    db_connect.close()
-    rev_list = []
     return rev_list
 
 
