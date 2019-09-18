@@ -3,8 +3,8 @@ import os
 import ap_config
 import re
 import time
-import sqlite3
 from ap_sqlite3 import EasySqlite
+import ap_print
 
 class PVSStudioHandler:
     def __init__(self, *args, **kwargs):
@@ -14,9 +14,9 @@ class PVSStudioHandler:
         # 生成要检查源码文件集合的xml文件
         self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
+        ap_print.aprint('生成plog...')
         self.__gen_plog()
         # 转换plog成html格式
-        # self.__convert_to_html(plogs)
 
     def convert_to_html(self, revisions = [])->bool:
         os.system("if not exist {0} mkdir {0}".format(ap_config.get_dir_pvs_report()))
@@ -32,29 +32,12 @@ class PVSStudioHandler:
         if len(revisions) == 1:
             output_name = "r{0}".format(revision_min)
 
-        ret = os.system("PlogConverter.exe {0} -o {1} -t Html -n {2}".format(input_plogs
+        ret = os.system("PlogConverter.exe {0} -o {1} -t fullHtml -n {2}".format(input_plogs
             , ap_config.get_dir_pvs_report()
             , output_name))
         if ret != 0:
             return False
         return  True
-
-    def get_revision_list(self)->{}:
-        rev_list = {}
-        for parent, dirnames, filenames in os.walk(ap_config.get_dir_pvs_plogs(),  followlinks=True):
-            for file in filenames:
-                revision = int(re.search('r(\d+)', file).group(1))
-                file_path = os.path.join(parent, file)
-                report_file_path = "{0}\\r{1}.html".format(ap_config.get_dir_pvs_report(), revision)
-
-                if not os.path.exists(report_file_path):
-                    revs = []
-                    revs.append(revision)
-                    self.convert_to_html(revs)
-                ltime = time.localtime(os.path.getctime(file_path))
-                str_time = time.strftime("%Y-%m-%d %H:%M:%S", ltime)
-                rev_list[revision] = { "rev": "r{0}".format(revision), "time": str_time, "report_path": report_file_path }
-        return rev_list
 
     def __gen_src_filters(self, changes):
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
@@ -73,7 +56,7 @@ class PVSStudioHandler:
 
     def __gen_plog(self):
         os.system("if not exist {0} mkdir {0}".format(ap_config.get_dir_pvs_plogs()))
-        db = EasySqlite('test.db')
+        db = EasySqlite('rfp.db')
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
             for file in filenames:
                 file_path = os.path.join(parent, file)
