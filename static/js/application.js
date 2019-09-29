@@ -33,7 +33,7 @@ $(document).ready(function(){
     function changePagination(offset, total) {
         var visual_count = 9;
         var cur_page = parseInt(offset / one_page_count) + 1;
-        var total_page = parseInt(total / one_page_count) + 1;
+        var total_page = parseInt(total / one_page_count + 0.5);
 
         var first_page = '<li><a href="?offset=(0)" >&laquo;</a>\
                           </li>';
@@ -139,7 +139,7 @@ $(document).ready(function(){
                 row += "<td>"
                 row += "<a href='" + value.report_path + "'>PVS-Html</a>"
                 row += ", "
-                row += "<a href='" + value.report_path + "'>下载plog</a>"
+                row += "<a href='" + value.plog_path + "'>下载plog</a>"
                 row += "</td>"
             } else {
                 row += "<td>None</td>"

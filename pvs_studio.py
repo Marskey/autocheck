@@ -1,10 +1,10 @@
 import xml.etree.ElementTree as etree
 import os
-import ap_config
+import config
 import re
 import time
-from ap_sqlite3 import EasySqlite
-import ap_print
+from db_mgr import EasySqlite
+import printer
 
 class PVSStudioHandler:
     def __init__(self, *args, **kwargs):
@@ -14,17 +14,17 @@ class PVSStudioHandler:
         # 生成要检查源码文件集合的xml文件
         self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
-        ap_print.aprint('生成plog...')
+        printer.aprint('生成plog...')
         self.__gen_plog()
         # 转换plog成html格式
 
     def convert_to_html(self, revisions = [])->bool:
-        os.system("if not exist {0} mkdir {0}".format(ap_config.get_dir_pvs_report()))
+        os.system("if not exist {0} mkdir {0}".format(config.get_dir_pvs_report()))
         input_plogs = ""
         revision_min = 99999999
         revision_max = 0
         for revision in revisions:
-            input_plogs += "{0}\\r{1}.plog".format(ap_config.get_dir_pvs_plogs(), revision) + " "
+            input_plogs += "{0}\\r{1}.plog".format(config.get_dir_pvs_plogs(), revision) + " "
             revision_min = min(revision_min, int(revision))
             revision_max = max(revision_max, int(revision))
 
@@ -33,7 +33,7 @@ class PVSStudioHandler:
             output_name = "r{0}".format(revision_min)
 
         ret = os.system("PlogConverter.exe {0} -o {1} -t fullHtml -n {2}".format(input_plogs
-            , ap_config.get_dir_pvs_report()
+            , config.get_dir_pvs_report()
             , output_name))
         if ret != 0:
             return False
@@ -48,23 +48,23 @@ class PVSStudioHandler:
                 path = etree.SubElement(source_files, 'Path')
                 path.text = relPath
             sourcesRoot = etree.SubElement(xmlRoot, 'SourcesRoot')
-            sourcesRoot.text = ap_config.get_dir_src()
+            sourcesRoot.text = config.get_dir_src()
 
             data = etree.tostring(xmlRoot).decode('utf-8')
             file = open("temp/r{}.xml".format(revision), "w")
             file.write(data)
 
     def __gen_plog(self):
-        os.system("if not exist {0} mkdir {0}".format(ap_config.get_dir_pvs_plogs()))
+        os.system("if not exist {0} mkdir {0}".format(config.get_dir_pvs_plogs()))
         db = EasySqlite('rfp.db')
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
             for file in filenames:
                 file_path = os.path.join(parent, file)
                 filename = file[0:file.find(".")]
                 output_file_path = "{0}\\{1}.plog".format(
-                    ap_config.get_dir_pvs_plogs()
+                    config.get_dir_pvs_plogs()
                     , filename)
-                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --configuration "Release" -f "{2}"'.format(ap_config.get_dir_sln()
+                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --configuration "Release" -f "{2}"'.format(config.get_dir_sln()
                     , output_file_path
                     , file_path))
 

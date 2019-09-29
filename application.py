@@ -1,14 +1,16 @@
 # coding=utf-8
 from flask_socketio import SocketIO, emit
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file, send_from_directory
 from threading import Lock
 from apscheduler.schedulers.background import BackgroundScheduler
+from db_mgr import EasySqlite
 import inspect
 import ctypes
-import ap_config
-import ap_main
-import ap_print
+import config
+import main
+import printer
 import time
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -41,7 +43,10 @@ def _async_raise(tid, exctype):
 def print_handler(msg):
     socketio.emit('server_log', msg)
     socketio.sleep(0.1)
+    if len(message_logs) >= 12:
+        message_logs.pop(0)
     message_logs.append(msg)
+    
 
 def stop_thread(_thread):
     _async_raise(_thread.ident, SystemExit)
@@ -50,7 +55,10 @@ def stop_thread(_thread):
 def background_thread():
     global checker_thread
     try:
-        ap_main.do_check('base', 'head')
+        db = EasySqlite('rfp.db')
+        last_rev = db.execute("SELECT MAX(rev) FROM reports", [], False, False)
+
+        main.do_check(last_rev[0][0], 'head')
     except Exception as ex:
         print(ex)
     with thread_lock:
@@ -64,6 +72,12 @@ def index():
         offset = 0
     # only by sending this page first will the client be connected to the socketio instance
     return render_template('index.html') + '<script> var offset=' + str(offset) + ' </script>'
+
+@app.route('/download/<path:filename>')
+def download(filename):
+    file_path = os.path.join(app.root_path, filename)
+    directory = os.getcwd()  # 假设在当前目录
+    return send_from_directory(directory, filename, as_attachment=True)
 
 @socketio.on('connect')
 def on_connect():
@@ -84,22 +98,22 @@ def on_disconnect():
 def on_stop_check():
     global checker_thread
     if checker_thread is not None:
-        ap_print.aprint('已经停止了自检\n')
+        printer.aprint('已经停止了自检\n')
         stop_thread(checker_thread)
         checker_thread = None
         socketio.emit('checker_state', 0)
     else:
-        ap_print.aprint('后台并没有正在自检\n')
+        printer.aprint('后台并没有正在自检\n')
 
 @socketio.on('start_check')
 def on_stop_check():
     global checker_thread
     if checker_thread is None:
-        ap_print.aprint('开始自检\n')
+        printer.aprint('开始自检\n')
         socketio.emit('checker_state', 1)
         checker_thread = socketio.start_background_task(target=background_thread)
     else:
-        ap_print.aprint('正在自检\n')
+        printer.aprint('正在自检\n')
 
 @socketio.on('req_revision_info')
 def req_revision_info(offset, count):
@@ -107,9 +121,9 @@ def req_revision_info(offset, count):
     if count > 20:
         count = 20
 
-    rev_list = ap_main.get_revisions_list(offset, count)
-    total = ap_main.get_report_total_cnt()
-    msg = {"offset": offset, "total": ap_main.get_report_total_cnt(), "data": rev_list, "cur_time": time.time()}
+    rev_list = main.get_revisions_list(offset, count)
+    total = main.get_report_total_cnt()
+    msg = {"offset": offset, "total": main.get_report_total_cnt(), "data": rev_list, "cur_time": time.time()}
     emit('ack_revision_info', msg)
 
 def auto_check():
@@ -117,19 +131,19 @@ def auto_check():
         global checker_thread
         print(checker_thread)
         if checker_thread is None:
-            ap_print.aprint('开始自检\n')
+            printer.aprint('开始自检\n')
             socketio.emit('checker_state', 1)
             checker_thread = socketio.start_background_task(target=background_thread)
             print(checker_thread)
         else:
-            ap_print.aprint('正在自检\n')
+            printer.aprint('正在自检\n')
 
 if __name__ == '__main__':
-    ap_print.set_handler(print_handler)
+    printer.set_handler(print_handler)
     scheduler = BackgroundScheduler()
     job = scheduler.get_job("auto_check")
     if job is not None:
         scheduler.remove_job("auto_check")
     job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)

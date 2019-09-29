@@ -1,28 +1,27 @@
-import ap_config
-from ap_svn import TinySvnHandler
-from ap_pvs_studio import PVSStudioHandler
+import config
+from pvs_studio import PVSStudioHandler
 import os
-from ap_sqlite3 import EasySqlite
+from db_mgr import EasySqlite
 import re
 import time
-import ap_print
-
+import printer
+import src_controller_factory
 
 def do_check(rev_start, rev_end):
-    source_controller = TinySvnHandler(
-        ap_config.get_url_svn(), ap_config.get_dir_src())
+    source_controller = src_controller_factory.getSrcController(
+        config.get_url_svn(), config.get_dir_src())
     # 先更新
-    ap_print.aprint('更新代码...')
+    printer.aprint('更新代码...')
     source_controller.update()
     # 获取版本变化文件集合
-    ap_print.aprint('获取版本差异...')
+    printer.aprint('获取版本差异...')
+
     changed_files = source_controller.get_versions_changed(rev_start, rev_end)
 
-    ap_print.aprint('PVS-Studio 检查中...')
+    printer.aprint('PVS-Studio 检查中...')
     code_checker = PVSStudioHandler()
     code_checker.check(changed_files)
-    ap_print.aprint('PVS-Studio 检查结束')
-
+    printer.aprint('PVS-Studio 检查结束')
 
 def get_revisions_list(offset, count):
     code_checker = PVSStudioHandler()
@@ -39,14 +38,13 @@ def get_revisions_list(offset, count):
             if not os.path.exists(plog_file_path): 
                 do_check(revision, revision)
 
-            # report_file_path = "{0}\\r{1}.html".format(ap_config.get_dir_pvs_report(), revision)
-            report_file_path = "{0}\\r{1}\\index.html".format(ap_config.get_dir_pvs_report(), revision)
+            report_file_path = "{0}\\r{1}\\index.html".format(config.get_dir_pvs_report(), revision)
             if not os.path.exists(report_file_path):
                 revs = []
                 revs.append(revision)
                 code_checker.convert_to_html(revs)
 
-        rev_list[revision] = {"rev": "r{0}".format(revision), "time": str_time, "report_path": report_file_path}
+        rev_list[revision] = {"rev": "r{0}".format(revision), "time": str_time, "report_path": report_file_path, "plog_path": "download\\" + plog_file_path}
 
     return rev_list
 
