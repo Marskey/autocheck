@@ -1,54 +1,61 @@
-import config
-from pvs_studio import PVSStudioHandler
-import os
+from Ichecker import IChecker
+from checker_mgr import CheckerMgr
 from db_mgr import EasySqlite
+import config
+import os
 import re
 import time
 import printer
 import src_controller_factory
 
-def do_check(rev_start, rev_end):
-    source_controller = src_controller_factory.getSrcController(
-        config.get_url_svn(), config.get_dir_src())
-    # 先更新
-    printer.aprint('更新代码...')
-    source_controller.update()
-    # 获取版本变化文件集合
-    printer.aprint('获取版本差异...')
+source_controller = src_controller_factory.getSrcController(
+    "svn",
+    config.get_url_svn(),
+    config.get_dir_src())
 
+checker_mgr = CheckerMgr()
+
+def do_check(rev_start, rev_end):
+    global source_controller, checker_mgr
+
+    # 获取版本变化文件集合
+    printer.aprint('获取区间版本差异...')
     changed_files = source_controller.get_versions_changed(rev_start, rev_end)
 
-    printer.aprint('PVS-Studio 检查中...')
-    code_checker = PVSStudioHandler()
-    code_checker.check(changed_files)
-    printer.aprint('PVS-Studio 检查结束')
+    # 更新代码
+    for revision, values in changed_files.items():
+        printer.aprint('更新r{0}代码...'.format(revision))
+        source_controller.updateTo(revision)
 
-def get_revisions_list(offset, count):
-    code_checker = PVSStudioHandler()
+        #检查代码
+        printer.aprint('检查r{0}代码中...'.format(revision))
+        checker_mgr.check(revision, changed_files)
 
-    db = EasySqlite('rfp.db')
-    rev_list = {}
-    for row in db.execute("SELECT * FROM reports ORDER BY rev DESC LIMIT {0}, {1}".format(offset, count), [], False, False):
-        revision       = row[0]
-        plog_file_path = row[1]
-        str_time       = row[2]
+    save_commit_log(rev_start, rev_end)
+    printer.aprint('全部检查完毕.')
 
-        report_file_path = ""
-        if not plog_file_path == "":
-            if not os.path.exists(plog_file_path): 
-                do_check(revision, revision)
+def get_revisions_list(checker_name, offset, count):
+    if checker_mgr.get_checker(checker_name) is None:
+        printer.aprint('找不到该检查机：{0}'.format(checker_name))
+        return {}
 
-            report_file_path = "{0}\\r{1}\\index.html".format(config.get_dir_pvs_report(), revision)
-            if not os.path.exists(report_file_path):
-                revs = []
-                revs.append(revision)
-                code_checker.convert_to_html(revs)
-
-        rev_list[revision] = {"rev": "r{0}".format(revision), "time": str_time, "report_path": report_file_path, "plog_path": "download\\" + plog_file_path}
-
+    code_checker = checker_mgr.get_checker(checker_name)
+    rev_list = code_checker.get_result(offset, count)
     return rev_list
 
-def get_report_total_cnt():
+def get_report_total_cnt(checker_name):
+    code_checker = checker_mgr.get_checker(checker_name)
+    if code_checker is None:
+        return 0
+    return code_checker.get_result_total_cnt()
+
+def save_commit_log(rev_start, rev_end):
+    global source_controller
+    res = source_controller.get_version_log(rev_start, rev_end)
     db = EasySqlite('rfp.db')
-    db.execute("create table if not exists reports (rev integer primary key, path text, time timestamp default current_timestamp not null) ")
-    return db.execute("select count(rev) from reports", [], False, False)
+    for revision, values in res.items():
+        db.execute("insert or replace into commit_log values ({0}, '{1}', '{2}');".format(
+            revision, values['author'], values['msg']), [], False, True)
+
+def get_checker_name_list():
+    return checker_mgr.get_checker_name_list()

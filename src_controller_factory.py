@@ -1,4 +1,4 @@
-from src_controller import TinySrcController
+from Isrc_controller import TinySrcController
 from svn import TinySvn
 import config
 

@@ -6,8 +6,9 @@ $(document).ready(function(){
     socket = io(server);
     var log_received = [];
     // 每页的数据数量
-    var one_page_count = 5;
+    var one_page_count = 10;
     var server_time_offset = 0;
+    var sel_page = 0;
 
     socket.on('disconnect', () => {
         socket.open();
@@ -26,6 +27,7 @@ $(document).ready(function(){
     });
 
     socket.on('connect', () => {
+        req_checker_list()
         req_revision_info(offset)
     })
 
@@ -34,6 +36,9 @@ $(document).ready(function(){
         var visual_count = 9;
         var cur_page = parseInt(offset / one_page_count) + 1;
         var total_page = parseInt(total / one_page_count + 0.5);
+        if (total_page == 0) {
+            total_page = 1
+        }
 
         var first_page = '<li><a href="?offset=(0)" >&laquo;</a>\
                           </li>';
@@ -95,7 +100,8 @@ $(document).ready(function(){
                       </li>';
 
 
-        $('ul').html(first_page + pre_page + contain + next_page + last_page)
+        sel_page = cur_page;
+        $('#pagination').html(first_page + pre_page + contain + next_page + last_page)
     }
 
     socket.on('server_log', function (data) {
@@ -112,17 +118,17 @@ $(document).ready(function(){
 
     socket.on('checker_state', function(state) {
         if (state == 1) {
-            $(".btn").removeClass("btn-success").addClass("btn-danger").html('<i class="glyphicon glyphicon-stop"></i>')
+            $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('<i class="glyphicon glyphicon-stop"></i>')
         } else {
-            $(".btn").removeClass("btn-danger").addClass("btn-success").html('<i class="glyphicon glyphicon-play"></i>')
+            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('<i class="glyphicon glyphicon-play"></i>')
         }
     })
 
     // 请求版本信息
     function req_revision_info(offset) {
         if (socket != null) {
-            $('table tbody').html('<tr><td colspan="3"><p>Loading...</p></td></tr>');
-            socket.emit('req_revision_info', parseInt(offset), parseInt(one_page_count));
+            $('table tbody').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
+            socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
         }
     }
 
@@ -145,7 +151,15 @@ $(document).ready(function(){
                 row += "<td>None</td>"
             }
 
+            row += "<td>"
+            row += "<a href=''>" + value.author + "</a>"
+            row += "</td>"
+
             row += "</tr>"
+
+            row +="<tr><td colspan='4'>"
+            row +="<p>" + value.msg + "</p>" 
+            row +="</td></tr>"
 
             $('table tbody').append(row);
         })
@@ -157,7 +171,7 @@ $(document).ready(function(){
         changePagination(msg.offset, msg.total);
     })
 
-    $(".btn").on('click', function () {
+    $("#check_btn").on('click', function () {
         if (socket != null) {
             if ($(this).hasClass("btn-success")) {
                 socket.emit('start_check')
@@ -208,4 +222,21 @@ $(document).ready(function(){
 
         $("#left_time").html(htmlstr);
     }
+
+    function req_checker_list() {
+        if (socket != null) {
+            socket.emit('req_checker_list');
+        }
+    }
+
+    socket.on('ack_checker_list', (msg) => {
+        var contain = ""
+        msg.forEach(function(value) {
+            contain += "<option>"
+            contain += value
+            contain += "</option>"
+        })
+        $("#checker_selector").html(contain)
+        $("#checker_selector").selectpicker('refresh')
+    })
 });

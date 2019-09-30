@@ -46,7 +46,6 @@ def print_handler(msg):
     if len(message_logs) >= 12:
         message_logs.pop(0)
     message_logs.append(msg)
-    
 
 def stop_thread(_thread):
     _async_raise(_thread.ident, SystemExit)
@@ -60,7 +59,8 @@ def background_thread():
 
         main.do_check(last_rev[0][0], 'head')
     except Exception as ex:
-        print(ex)
+        printer.aprint(ex)
+        printer.aprint("检查意外结束")
     with thread_lock:
         checker_thread = None
         socketio.emit('checker_state', 0)
@@ -98,7 +98,7 @@ def on_disconnect():
 def on_stop_check():
     global checker_thread
     if checker_thread is not None:
-        printer.aprint('已经停止了自检\n')
+        printer.aprint('客户停止了自检\n')
         stop_thread(checker_thread)
         checker_thread = None
         socketio.emit('checker_state', 0)
@@ -106,7 +106,7 @@ def on_stop_check():
         printer.aprint('后台并没有正在自检\n')
 
 @socketio.on('start_check')
-def on_stop_check():
+def on_start_check():
     global checker_thread
     if checker_thread is None:
         printer.aprint('开始自检\n')
@@ -116,15 +116,20 @@ def on_stop_check():
         printer.aprint('正在自检\n')
 
 @socketio.on('req_revision_info')
-def req_revision_info(offset, count):
+def req_revision_info(checker_name, offset, count):
     # 一页个数最大不超过20个
     if count > 20:
         count = 20
 
-    rev_list = main.get_revisions_list(offset, count)
-    total = main.get_report_total_cnt()
-    msg = {"offset": offset, "total": main.get_report_total_cnt(), "data": rev_list, "cur_time": time.time()}
+    total = main.get_report_total_cnt(checker_name)
+    rev_list = main.get_revisions_list(checker_name, offset, count)
+    msg = {"offset": offset, "total": total, "data": rev_list, "cur_time": time.time()}
     emit('ack_revision_info', msg)
+
+@socketio.on('req_checker_list')
+def req_checker_list():
+    msg = main.get_checker_name_list()
+    emit('ack_checker_list', msg)
 
 def auto_check():
     with thread_lock:
@@ -144,6 +149,7 @@ if __name__ == '__main__':
     job = scheduler.get_job("auto_check")
     if job is not None:
         scheduler.remove_job("auto_check")
+    # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
     job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
     socketio.run(app, debug=True, host="0.0.0.0", port=5000)

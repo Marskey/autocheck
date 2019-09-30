@@ -1,7 +1,8 @@
 import subprocess
 import xml.etree.ElementTree as etree
 import os
-from src_controller import TinySrcController
+from Isrc_controller import TinySrcController
+
 
 class TinySvn(TinySrcController):
     def __init__(self, svn_url, local_path):
@@ -9,29 +10,44 @@ class TinySvn(TinySrcController):
         self.url_root = self.__get_url_root()
         return
 
-    def update(self) -> bool:
-        ret = os.system("svn update {0}".format(self.local_path))
+    def updateTo(self, revision):
+        ret = os.system("svn update -r{0} {1}".format(revision, self.local_path))
         if ret == 0:
             print('更新完成')
         print(ret)
         return True
 
     def get_versions_changed(self, start, end):
-        ret = subprocess.check_output('svn log -v -r {0}:{1} "{2}" --xml --incremental'.format(start, end, self.local_path))
-        strRet = "<root>" + ret.decode("utf-8") + "</root>"
-        root = etree.fromstring(strRet)
+        ret = subprocess.check_output(
+            'svn log -v -r {0}:{1} "{2}" --xml '.format(start, end, self.local_path))
+        root = etree.fromstring(ret)
         res = {}
         for logentry in root.iter('logentry'):
             revision = logentry.attrib['revision']
             res[revision] = []
             for svnPath in logentry.iter('path'):
-                local_fpath = self.__get_local_relative_path(svnPath.text)
-                if len(local_fpath) != 0:
-                    res[revision].append(local_fpath)
+                action = svnPath.attrib['action'].lower()
+                if action != 'd':
+                    local_fpath = self.__get_local_relative_path(svnPath.text)
+                    if len(local_fpath) != 0:
+                        res[revision].append(local_fpath)
+        return res
+
+    def get_version_log(self, start, end):
+        ret = subprocess.check_output(
+            'svn log -v -r{0}:{1} "{2}" --xml'.format(start, end, self.local_path))
+        root = etree.fromstring(ret)
+        res = {}
+        for logentry in root.iter('logentry'):
+            revision = logentry.attrib['revision']
+            author = logentry.find('author').text
+            msg = logentry.find('msg').text
+            res[revision] = {'author': author, 'msg': msg}
         return res
 
     def __get_url_root(self):
-        ret = subprocess.check_output('svn info "{}" --xml'.format(self.local_path))
+        ret = subprocess.check_output(
+            'svn info "{}" --xml'.format(self.local_path))
         root = etree.fromstring(ret.decode("utf-8"))
         entry = root.find('entry')
         if entry is None:

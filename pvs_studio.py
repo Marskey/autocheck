@@ -1,3 +1,4 @@
+from Ichecker import IChecker
 import xml.etree.ElementTree as etree
 import os
 import config
@@ -6,19 +7,56 @@ import time
 from db_mgr import EasySqlite
 import printer
 
-class PVSStudioHandler:
+class PVSStudioChecker(IChecker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
-    def check(self, changed_files):
+    def get_name(self)->str:
+        return "PVS-Studio"
+
+    def check(self, changed_files)->None:
         # 生成要检查源码文件集合的xml文件
         self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
-        printer.aprint('生成plog...')
+        printer.aprint('PVS生成plog...')
         self.__gen_plog()
-        # 转换plog成html格式
 
-    def convert_to_html(self, revisions = [])->bool:
+    def get_result(self, offset, count)->dict:
+        rev_list = {} 
+        db = EasySqlite('rfp.db')
+        for row in db.execute("SELECT * FROM pvs_reports left JOIN commit_log using (rev) ORDER BY rev DESC LIMIT {0}, {1}".format(offset, count), [], False, False):
+            revision       = row[0]
+            plog_file_path = row[1]
+            str_time       = row[2]
+            author         = row[3]
+            msg            = row[4]
+
+            report_file_path = ""
+            if not plog_file_path == "":
+                if os.path.exists(plog_file_path): 
+                    report_file_path = "{0}\\r{1}\\index.html".format(config.get_dir_pvs_report(), revision)
+                    if not os.path.exists(report_file_path):
+                        revs = []
+                        revs.append(revision)
+                        self.__convert_to_html(revs)
+
+            rev_list[revision] = {"rev": "r{0}".format(revision)
+                , "time": str_time
+                , "report_path": report_file_path
+                , "plog_path": "download\\" + plog_file_path
+                , "author": author
+                , "msg": msg
+                }
+
+        return rev_list
+
+    def get_result_total_cnt(self)->int:
+        db = EasySqlite('rfp.db')
+        db.execute("create table if not exists pvs_reports (rev integer primary key, path text, time timestamp default current_timestamp not null) ")
+        return db.execute("select count(rev) from pvs_reports", [], False, False)
+
+    # 转换plog成html格式
+    def __convert_to_html(self, revisions = [])->bool:
         os.system("if not exist {0} mkdir {0}".format(config.get_dir_pvs_report()))
         input_plogs = ""
         revision_min = 99999999
@@ -55,6 +93,7 @@ class PVSStudioHandler:
             file.write(data)
 
     def __gen_plog(self):
+        res = []
         os.system("if not exist {0} mkdir {0}".format(config.get_dir_pvs_plogs()))
         db = EasySqlite('rfp.db')
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
@@ -95,4 +134,5 @@ class PVSStudioHandler:
                     output_file_path = ""
 
                 revision = int(filename[1:])
-                db.execute("insert or replace into reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path), [], False, True)
+                db.execute("insert or replace into pvs_reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path), [], False, True)
+        return res
