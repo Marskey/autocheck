@@ -26,6 +26,9 @@ message_logs = []
 
 is_checking = False
 
+recheck_rev = 0
+recheck_checker = ""
+
 def _async_raise(tid, exctype):
     """raises the exception, performs cleanup if needed"""
     tid = ctypes.c_long(tid)
@@ -55,9 +58,20 @@ def background_thread():
     global checker_thread
     try:
         db = EasySqlite('rfp.db')
-        last_rev = db.execute("SELECT MAX(rev) FROM reports", [], False, False)
+        last_rev = db.execute("SELECT MAX(rev) FROM commit_log", [], False, False)
 
-        main.do_check(last_rev[0][0], 'head')
+        main.do_check(last_rev[0][0], 'head', "")
+    except Exception as ex:
+        printer.aprint(ex)
+        printer.aprint("检查意外结束")
+    with thread_lock:
+        checker_thread = None
+        socketio.emit('checker_state', 0)
+
+def background_thread_recheck():
+    global checker_thread
+    try:
+        main.do_check(recheck_rev, recheck_rev, recheck_checker)
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
@@ -86,6 +100,9 @@ def on_connect():
         socketio.emit('checker_state', 1)
     else:
         socketio.emit('checker_state', 0)
+
+    msg = main.get_checker_name_list()
+    emit('ack_checker_list', msg)
 
     for log in message_logs:
         socketio.emit('server_log', log)
@@ -126,10 +143,17 @@ def req_revision_info(checker_name, offset, count):
     msg = {"offset": offset, "total": total, "data": rev_list, "cur_time": time.time()}
     emit('ack_revision_info', msg)
 
-@socketio.on('req_checker_list')
-def req_checker_list():
-    msg = main.get_checker_name_list()
-    emit('ack_checker_list', msg)
+@socketio.on('recheck')
+def recheck(rev, checker_name):
+    global checker_thread, recheck_rev, recheck_checker
+    if checker_thread is None:
+        printer.aprint('开始自检\n')
+        socketio.emit('checker_state', 1)
+        recheck_rev = rev
+        recheck_checker = checker_name
+        checker_thread = socketio.start_background_task(target=background_thread_recheck)
+    else:
+        printer.aprint('正在自检\n')
 
 def auto_check():
     with thread_lock:

@@ -1,11 +1,15 @@
 import urllib
 
 DIR_SLN  = "e:/igg/star2/source/star2.sln"
-DIR_SRC  = "e:/igg/star2/source/"
+DIR_SRC  = "e:/igg/star2/source"
 URL_SVN  = 'https://10.0.3.3/svn/Star/01. Develop/05. Source/02. Server/Star2'
 URL_ROOT = ''
+
 DIR_PVS_PLOGS = 'pvs_plogs'
 DIR_PVS_REPORTS = 'static\\pvs_reports'
+
+DIR_CPP_CHECK_RES = 'cppcheck_res'
+DIR_CPP_CHECK_REPORTS = 'static\\cppcheck_reports'
 
 def get_url_svn():
     return URL_SVN
@@ -21,3 +25,9 @@ def get_dir_pvs_plogs():
 
 def get_dir_pvs_report():
     return DIR_PVS_REPORTS
+
+def get_dir_cpp_check_res():
+    return DIR_CPP_CHECK_RES
+
+def get_dir_cpp_check_report():
+    return DIR_CPP_CHECK_REPORTS

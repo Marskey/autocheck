@@ -9,6 +9,7 @@ $(document).ready(function(){
     var one_page_count = 10;
     var server_time_offset = 0;
     var sel_page = 0;
+    var data_inited = false;
 
     socket.on('disconnect', () => {
         socket.open();
@@ -27,8 +28,6 @@ $(document).ready(function(){
     });
 
     socket.on('connect', () => {
-        req_checker_list()
-        req_revision_info(offset)
     })
 
     // 分页显示逻辑处理
@@ -118,9 +117,15 @@ $(document).ready(function(){
 
     socket.on('checker_state', function(state) {
         if (state == 1) {
-            $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('<i class="glyphicon glyphicon-stop"></i>')
+            $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
+            $("table tbody button").attr('disabled', true)
         } else {
-            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('<i class="glyphicon glyphicon-play"></i>')
+            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('开始检查<i class="glyphicon glyphicon-play"></i>')
+            $("table tbody button").attr('disabled', false)
+
+            if (data_inited) {
+                req_revision_info(offset)
+            }
         }
     })
 
@@ -129,6 +134,7 @@ $(document).ready(function(){
         if (socket != null) {
             $('table tbody').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
             socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
+            data_inited = false;
         }
     }
 
@@ -138,18 +144,23 @@ $(document).ready(function(){
         Object.keys(msg.data).sort().reverse().forEach((key) => {
             value = msg.data[key];
             var row = "<tr id='" + key + "'>\
-                       <td><a href=''>" + value.rev + "</a></td>\
+                       <td><a href=''>r" + value.rev + "</a></td>\
                        <td>" + value.time + "</td>"
 
+            row += "<td>"
             if (value.report_path !== "") {
-                row += "<td>"
-                row += "<a href='" + value.report_path + "'>PVS-Html</a>"
+                row += "<a href='" + value.report_path + "'>网页报告</a>"
                 row += ", "
-                row += "<a href='" + value.plog_path + "'>下载plog</a>"
-                row += "</td>"
+                row += "<a href='" + value.plog_path + "'>下载原报告文件</a>"
             } else {
-                row += "<td>None</td>"
+                row += "None"
             }
+
+            row += "<button class='btn btn-info pull-right' type='button'>\
+                            重检 <i class='glyphicon glyphicon-repeat'></i>\
+                        </button>"
+
+            row += "</td>"
 
             row += "<td>"
             row += "<a href=''>" + value.author + "</a>"
@@ -169,6 +180,7 @@ $(document).ready(function(){
         show_left_time();
 
         changePagination(msg.offset, msg.total);
+        data_inited = true;
     })
 
     $("#check_btn").on('click', function () {
@@ -223,12 +235,6 @@ $(document).ready(function(){
         $("#left_time").html(htmlstr);
     }
 
-    function req_checker_list() {
-        if (socket != null) {
-            socket.emit('req_checker_list');
-        }
-    }
-
     socket.on('ack_checker_list', (msg) => {
         var contain = ""
         msg.forEach(function(value) {
@@ -238,5 +244,19 @@ $(document).ready(function(){
         })
         $("#checker_selector").html(contain)
         $("#checker_selector").selectpicker('refresh')
+
+        req_revision_info(offset)
+    })
+
+    $("#checker_selector").on('change', function() {
+        req_revision_info(offset)
+    })
+
+    $("table tbody").on('click', 'button', function() {
+        rev = $(this).parent().parent().attr('id')
+        checker_name = $("#checker_selector").val()
+        if (socket != null) {
+            socket.emit('recheck', rev, checker_name)
+        }
     })
 });

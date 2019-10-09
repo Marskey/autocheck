@@ -18,7 +18,7 @@ class PVSStudioChecker(IChecker):
         # 生成要检查源码文件集合的xml文件
         self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
-        printer.aprint('PVS生成plog...')
+        printer.aprint(self.get_name() + '生成plog...')
         self.__gen_plog()
 
     def get_result(self, offset, count)->dict:
@@ -40,7 +40,7 @@ class PVSStudioChecker(IChecker):
                         revs.append(revision)
                         self.__convert_to_html(revs)
 
-            rev_list[revision] = {"rev": "r{0}".format(revision)
+            rev_list[revision] = {"rev": revision
                 , "time": str_time
                 , "report_path": report_file_path
                 , "plog_path": "download\\" + plog_file_path
@@ -83,14 +83,17 @@ class PVSStudioChecker(IChecker):
             xmlRoot = etree.Element('SourceFilesFilters')
             source_files = etree.SubElement(xmlRoot, 'SourceFiles')
             for relPath in paths:
-                path = etree.SubElement(source_files, 'Path')
-                path.text = relPath
+                ext = os.path.splitext(relPath)[-1]
+                if ext == ".h" or ext == ".cpp" or ext == ".hpp":
+                    path = etree.SubElement(source_files, 'Path')
+                    path.text = relPath
             sourcesRoot = etree.SubElement(xmlRoot, 'SourcesRoot')
             sourcesRoot.text = config.get_dir_src()
 
             data = etree.tostring(xmlRoot).decode('utf-8')
             file = open("temp/r{}.xml".format(revision), "w")
             file.write(data)
+            file.close
 
     def __gen_plog(self):
         res = []
@@ -99,7 +102,7 @@ class PVSStudioChecker(IChecker):
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
             for file in filenames:
                 file_path = os.path.join(parent, file)
-                filename = file[0:file.find(".")]
+                filename = os.path.splitext(file)[0]
                 output_file_path = "{0}\\{1}.plog".format(
                     config.get_dir_pvs_plogs()
                     , filename)

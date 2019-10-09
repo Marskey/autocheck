@@ -15,7 +15,7 @@ source_controller = src_controller_factory.getSrcController(
 
 checker_mgr = CheckerMgr()
 
-def do_check(rev_start, rev_end):
+def do_check(rev_start, rev_end, checker_name):
     global source_controller, checker_mgr
 
     # 获取版本变化文件集合
@@ -29,7 +29,12 @@ def do_check(rev_start, rev_end):
 
         #检查代码
         printer.aprint('检查r{0}代码中...'.format(revision))
-        checker_mgr.check(revision, changed_files)
+        if checker_name == "":
+            checker_mgr.check(changed_files)
+        else:
+            checker = checker_mgr.get_checker(checker_name)
+            checker.check(changed_files)
+        printer.aprint('检查r{0}代码结束'.format(revision))
 
     save_commit_log(rev_start, rev_end)
     printer.aprint('全部检查完毕.')
