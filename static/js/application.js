@@ -209,6 +209,9 @@ $(document).ready(function(){
             event.setHours(18, 0, 0);
         } else if (cur_time.getHours() < 21) {
             event.setHours(21, 0, 0);
+        } else {
+            event.setDate(event.getDate() + 1)
+            event.setHours(9, 0, 0);
         }
 
         left_sec = parseInt((event - cur_time + server_time_offset) / 1000);
@@ -274,7 +277,6 @@ $(document).ready(function(){
 
 $(document).scroll(function () {
     var scroll_h = $(document).scrollTop(); //滚动条高度
-    console.log(scroll_h)
     if (scroll_h > 180) { //当滚动条高度 > 侧边栏底部到顶部的高
         $("#sidepanel").css({
             'position': 'fixed',
