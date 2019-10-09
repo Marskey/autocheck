@@ -58,9 +58,13 @@ def background_thread():
     global checker_thread
     try:
         db = EasySqlite('rfp.db')
-        last_rev = db.execute("SELECT MAX(rev) FROM commit_log", [], False, False)
+        last_rev = db.execute("SELECT MAX(rev) FROM commit_log", [], False, False)[0][0]
+        print(last_rev)
 
-        main.do_check(last_rev[0][0], 'head', "")
+        if last_rev is None:
+            last_rev = 'base'
+
+        main.do_check(last_rev, 'head', "")
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")

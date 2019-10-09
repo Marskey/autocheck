@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<results version="2">
-    <cppcheck version="1.89"/>
-    <errors>
-        <error id="wrongPrintfScanfArgNum" severity="error" msg="sscanf_s format string requires 3 parameters but only 1 is given." verbose="sscanf_s format string requires 3 parameters but only 1 is given." cwe="685">
-            <location file0="e:\IGG\Star2\Source\source\main\ServerDispatcher\CommandService.cpp" file="e:\IGG\Star2\Source\source\main\ServerDispatcher\CommandService.cpp" line="266" column="5"/>
-        </error>
-    </errors>
-</results>

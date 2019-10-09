@@ -35,8 +35,8 @@ def do_check(rev_start, rev_end, checker_name):
             checker = checker_mgr.get_checker(checker_name)
             checker.check(changed_files)
         printer.aprint('检查r{0}代码结束'.format(revision))
+        save_commit_log(revision, revision)
 
-    save_commit_log(rev_start, rev_end)
     printer.aprint('全部检查完毕.')
 
 def get_revisions_list(checker_name, offset, count):

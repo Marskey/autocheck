@@ -5,11 +5,11 @@ DIR_SRC  = "e:/igg/star2/source"
 URL_SVN  = 'https://10.0.3.3/svn/Star/01. Develop/05. Source/02. Server/Star2'
 URL_ROOT = ''
 
-DIR_PVS_PLOGS = 'pvs_plogs'
-DIR_PVS_REPORTS = 'static\\pvs_reports'
+DIR_PVS_PLOGS = 'check_results\\pvs_plogs'
+DIR_PVS_REPORTS = 'static\\reports\\pvs_reports'
 
-DIR_CPP_CHECK_RES = 'cppcheck_res'
-DIR_CPP_CHECK_REPORTS = 'static\\cppcheck_reports'
+DIR_CPP_CHECK_RES = 'check_results\\cppcheck_res'
+DIR_CPP_CHECK_REPORTS = 'static\\reports\\cppcheck_reports'
 
 def get_url_svn():
     return URL_SVN

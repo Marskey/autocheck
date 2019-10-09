@@ -245,11 +245,22 @@ $(document).ready(function(){
         $("#checker_selector").html(contain)
         $("#checker_selector").selectpicker('refresh')
 
+        var coosStr = document.cookie;    //获取cookie中的数据
+        var coos = coosStr.split("; ");     //多个值之间用; 分隔
+        for (var i = 0; i < coos.length; i++) {   //获取select写入的id
+            var coo = coos[i].split("=");
+            if ("checker" == coo[0]) {
+                $("#checker_selector").selectpicker('val', coo[1])
+            }
+        }
+
         req_revision_info(offset)
     })
 
     $("#checker_selector").on('change', function() {
         req_revision_info(offset)
+        checker_name = $("#checker_selector").val()
+        document.cookie = "checker=" + checker_name
     })
 
     $("table tbody").on('click', 'button', function() {
@@ -260,3 +271,19 @@ $(document).ready(function(){
         }
     })
 });
+
+$(document).scroll(function () {
+    var scroll_h = $(document).scrollTop(); //滚动条高度
+    console.log(scroll_h)
+    if (scroll_h > 180) { //当滚动条高度 > 侧边栏底部到顶部的高
+        $("#sidepanel").css({
+            'position': 'fixed',
+            'top': 0,
+        });
+    } else { //如果滚动条高度 <  侧边栏底部到顶部的高
+        $("#sidepanel").css({
+            'position': '',
+            'top': '',
+        });
+    }
+})

@@ -3,7 +3,11 @@
 *.db
 
 *.swp
+*.xml
+*.html
 
 pvs_plogs/
 pvs_reports/
 temp/
+static/reports
+check_results
