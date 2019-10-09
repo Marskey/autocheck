@@ -1,4 +1,5 @@
 var socket = null
+var navbar_h = $(".navbar").outerHeight();
 $(document).ready(function(){
     //connect to the socket server.
     var server = 'http://' + document.domain + ':' + location.port;
@@ -10,6 +11,7 @@ $(document).ready(function(){
     var server_time_offset = 0;
     var sel_page = 0;
     var data_inited = false;
+    navbar_h = $(".navbar").outerHeight();
 
     socket.on('disconnect', () => {
         socket.open();
@@ -277,10 +279,11 @@ $(document).ready(function(){
 
 $(document).scroll(function () {
     var scroll_h = $(document).scrollTop(); //滚动条高度
-    if (scroll_h > 180) { //当滚动条高度 > 侧边栏底部到顶部的高
+    console.log(navbar_h)
+    if (scroll_h > navbar_h + 50) { //当滚动条高度 > 侧边栏底部到顶部的高
         $("#sidepanel").css({
             'position': 'fixed',
-            'top': 0,
+            'top': navbar_h,
         });
     } else { //如果滚动条高度 <  侧边栏底部到顶部的高
         $("#sidepanel").css({
