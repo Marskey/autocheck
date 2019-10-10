@@ -26,7 +26,7 @@ class PVSStudioChecker(IChecker):
     def get_result(self, offset, count)->dict:
         rev_list = {} 
         db = EasySqlite('rfp.db')
-        for row in db.execute("SELECT * FROM pvs_reports left JOIN commit_log using (rev) ORDER BY rev DESC LIMIT {0}, {1}".format(offset, count), [], False, False):
+        for row in db.execute("SELECT * FROM pvs_reports left JOIN commit_log using (rev) WHERE path <> '' ORDER BY rev DESC LIMIT {0}, {1}".format(offset, count), [], False, False):
             revision       = row[0]
             plog_file_path = row[1]
             str_time       = row[2]
