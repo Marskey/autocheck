@@ -67,6 +67,6 @@ class TinySvn(TinySrcController):
 
     def __get_local_relative_path(self, changedPath):
         url_path = self.url_root + changedPath
-        if url_path.toLowerCase().startswith(self.svn_url.toLowerCase()):
+        if url_path.lower().startswith(self.svn_url.lower()):
             return url_path[len(self.svn_url):]
         return ""

@@ -11,3 +11,4 @@ pvs_reports/
 temp/
 static/reports
 check_results
+stderr.log
