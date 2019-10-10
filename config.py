@@ -3,7 +3,6 @@ import urllib
 DIR_SLN  = "e:/igg/star2/source/star2.sln"
 DIR_SRC  = "e:/igg/star2/source"
 URL_SVN  = 'https://10.0.3.3/svn/Star/01. Develop/05. Source/02. Server/Star2'
-URL_ROOT = ''
 
 DIR_PVS_PLOGS = 'check_results\\pvs_plogs'
 DIR_PVS_REPORTS = 'static\\reports\\pvs_reports'

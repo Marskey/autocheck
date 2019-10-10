@@ -163,12 +163,10 @@ def recheck(rev, checker_name):
 def auto_check():
     with thread_lock:
         global checker_thread
-        print(checker_thread)
         if checker_thread is None:
             printer.aprint('开始自检\n')
             socketio.emit('checker_state', 1)
             checker_thread = socketio.start_background_task(target=background_thread)
-            print(checker_thread)
         else:
             printer.aprint('正在自检\n')
 

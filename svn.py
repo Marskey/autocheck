@@ -14,7 +14,6 @@ class TinySvn(TinySrcController):
         ret = os.system("svn update -r{0} {1}".format(revision, self.local_path))
         if ret == 0:
             print('更新完成')
-        print(ret)
         return True
 
     def get_versions_changed(self, start, end):
@@ -68,6 +67,6 @@ class TinySvn(TinySrcController):
 
     def __get_local_relative_path(self, changedPath):
         url_path = self.url_root + changedPath
-        if url_path.startswith(self.svn_url):
+        if url_path.toLowerCase().startswith(self.svn_url.toLowerCase()):
             return url_path[len(self.svn_url):]
         return ""

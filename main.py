@@ -21,6 +21,7 @@ def do_check(rev_start, rev_end, checker_name):
     # 获取版本变化文件集合
     printer.aprint('获取区间版本差异...')
     changed_files = source_controller.get_versions_changed(rev_start, rev_end)
+    print(changed_files)
 
     # 更新代码
     for revision, values in changed_files.items():
