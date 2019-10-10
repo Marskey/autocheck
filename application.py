@@ -175,10 +175,15 @@ def auto_check():
 if __name__ == '__main__':
     printer.set_handler(print_handler)
     scheduler = BackgroundScheduler()
+
+    # 如果没有表格创建表格
+    db = EasySqlite('rfp.db')
+    db.execute("create table if not exists commit_log (rev integer primary key, author text, msg text) ", [], False, False)
+
     job = scheduler.get_job("auto_check")
     if job is not None:
         scheduler.remove_job("auto_check")
     # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
     job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
-    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5001)
