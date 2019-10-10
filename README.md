@@ -2,12 +2,6 @@
 
 Install python3 <https://www.python.org/downloads/>
 
-- sqllite3
-
-    ```sh
-     pip install sqllite3
-    ```
-
 - flask
 
     ```sh
