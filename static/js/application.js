@@ -279,7 +279,7 @@ $(document).ready(function(){
 
 $(document).scroll(function () {
     var scroll_h = $(document).scrollTop(); //滚动条高度
-    console.log(navbar_h)
+
     if (scroll_h > navbar_h + 50) { //当滚动条高度 > 侧边栏底部到顶部的高
         $("#sidepanel").css({
             'position': 'fixed',
