@@ -68,7 +68,7 @@ class CppChecker(IChecker):
         if len(revisions) == 1:
             output_name = "r{0}".format(revision_min)
 
-        ret = os.system("python2.7 cppcheck\\htmlreport\\cppcheck-htmlreport --file={0} --report-dir={1}\\{2}".format(input_file
+        ret = os.system("python cppcheck\\htmlreport\\cppcheck-htmlreport --file={0} --report-dir={1}\\{2}".format(input_file
             , config.get_dir_cpp_check_report()
             , output_name
             ))
