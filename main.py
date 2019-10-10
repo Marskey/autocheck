@@ -67,3 +67,7 @@ def save_commit_log(rev_start, rev_end):
 
 def get_checker_name_list():
     return checker_mgr.get_checker_name_list()
+
+# changed_files = source_controller.get_versions_changed(45262, 45262)
+# checker = checker_mgr.get_checker('cppcheck')
+# checker.check(changed_files)

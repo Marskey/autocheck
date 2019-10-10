@@ -99,10 +99,10 @@ class CppChecker(IChecker):
                 output_file_path = "{0}\\{1}.xml".format(
                     config.get_dir_cpp_check_res()
                     , filename)
-                ret = os.system('cppcheck --file-list={0} --language=c++ -q --xml 2>{1}'.format(file_path
+                ret = os.system('cppcheck --file-list={0} --error-exitcode=200 --language=c++ -q --xml 2>{1}'.format(file_path
                     , output_file_path))
 
-                if ret != 0:
+                if ret != 200:
                     output_file_path = ""
 
                 revision = int(filename[1:])
