@@ -37,6 +37,8 @@ def do_check(rev_start, rev_end, checker_name):
         printer.aprint('检查r{0}代码结束'.format(revision))
         save_commit_log(revision, revision)
 
+    printer.aprint('更新代码至最新.')
+    source_controller.updateTo('head')
     printer.aprint('全部检查完毕.')
 
 def get_revisions_list(checker_name, offset, count):

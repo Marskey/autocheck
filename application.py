@@ -59,10 +59,11 @@ def background_thread():
     try:
         db = EasySqlite('rfp.db')
         last_rev = db.execute("SELECT MAX(rev) FROM commit_log", [], False, False)[0][0]
-        print(last_rev)
 
         if last_rev is None:
             last_rev = 'base'
+        else:
+            last_rev += 1
 
         main.do_check(last_rev, 'head', "")
     except Exception as ex:
