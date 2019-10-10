@@ -26,14 +26,15 @@ def do_check(rev_start, rev_end, checker_name):
     for revision, values in changed_files.items():
         printer.aprint('更新r{0}代码...'.format(revision))
         source_controller.updateTo(revision)
-
+        rev_changes = {}
+        rev_changes[revision] = values
         #检查代码
         printer.aprint('检查r{0}代码中...'.format(revision))
         if checker_name == "":
-            checker_mgr.check(changed_files)
+            checker_mgr.check(rev_changes)
         else:
             checker = checker_mgr.get_checker(checker_name)
-            checker.check(changed_files)
+            checker.check(rev_changes)
         printer.aprint('检查r{0}代码结束'.format(revision))
         save_commit_log(revision, revision)
 
