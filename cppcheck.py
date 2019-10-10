@@ -10,6 +10,8 @@ import printer
 class CppChecker(IChecker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        db = EasySqlite('rfp.db')
+        db.execute("create table if not exists cppcheck_reports (rev integer primary key, path text, time timestamp default current_timestamp not null) ")
     
     def get_name(self)->str:
         return "cppcheck"
@@ -50,7 +52,6 @@ class CppChecker(IChecker):
 
     def get_result_total_cnt(self)->int:
         db = EasySqlite('rfp.db')
-        db.execute("create table if not exists cppcheck_reports (rev integer primary key, path text, time timestamp default current_timestamp not null) ")
         return db.execute("select count(rev) from cppcheck_reports", [], False, False)
 
     # 转换结果成html格式
