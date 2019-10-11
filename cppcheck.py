@@ -52,7 +52,7 @@ class CppChecker(IChecker):
 
     def get_result_total_cnt(self)->int:
         db = EasySqlite('rfp.db')
-        return db.execute("select count(rev) from cppcheck_reports", [], False, False)
+        return db.execute("select count(rev) from cppcheck_reports WHERE path <> '' ", [], False, False)
 
     # 转换结果成html格式
     def __convert_to_html(self, revisions = [])->bool:

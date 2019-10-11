@@ -54,7 +54,7 @@ class PVSStudioChecker(IChecker):
 
     def get_result_total_cnt(self)->int:
         db = EasySqlite('rfp.db')
-        return db.execute("select count(rev) from pvs_reports", [], False, False)
+        return db.execute("select count(rev) from pvs_reports WHERE path <> '' ", [], False, False)
 
     # 转换plog成html格式
     def __convert_to_html(self, revisions = [])->bool:
