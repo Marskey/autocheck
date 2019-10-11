@@ -286,7 +286,7 @@ $(document).ready(function(){
 
     function checkHasLocalDir() {
         if ($("#local_src_dir").val() == "") {
-            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%;">\
+            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%; z-index:10">\
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span\
                 aria-hidden="true">&times;</span></button>\
         <strong>Warning!</strong> 未输入本地项目路径，这将会影响报告文件索引\
