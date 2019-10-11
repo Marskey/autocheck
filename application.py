@@ -1,6 +1,6 @@
 # coding=utf-8
 from flask_socketio import SocketIO, emit
-from flask import Flask, render_template, request, send_file, send_from_directory, Response, stream_with_context
+from flask import Flask, render_template, request, Response
 from threading import Lock
 from apscheduler.schedulers.background import BackgroundScheduler
 from db_mgr import EasySqlite
@@ -15,7 +15,6 @@ import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-app.debug = True
 
 # turn the flask app into a socketio app
 socketio = SocketIO(app)
@@ -87,11 +86,8 @@ def background_thread_recheck():
 
 @app.route('/')
 def index():
-    offset = request.args.get('offset')
-    if offset is None:
-        offset = 0
     # only by sending this page first will the client be connected to the socketio instance
-    return render_template('index.html') + '<script> var offset=' + str(offset) + ' </script>'
+    return render_template('index.html')
 
 @app.route('/download/<path:filename>')
 def download(filename):
@@ -104,7 +100,7 @@ def download(filename):
 
     dir_change = re.compile(re.escape(config.get_dir_src()), re.IGNORECASE)
 
-    return Response(dir_change.sub(local_dir, content), content_type='application/x-msdownload')
+    return Response(dir_change.sub(re.escape(local_dir), content), content_type='application/x-msdownload')
 
 @socketio.on('connect')
 def on_connect():

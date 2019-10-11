@@ -11,6 +11,7 @@ $(document).ready(function(){
     var server_time_offset = 0;
     var sel_page = 0;
     var data_inited = false;
+
     navbar_h = $(".navbar").outerHeight();
 
     socket.on('disconnect', () => {
@@ -126,15 +127,16 @@ $(document).ready(function(){
             $("table tbody button").attr('disabled', false)
 
             if (data_inited) {
-                req_revision_info(offset)
+                req_revision_info()
             }
         }
     })
 
     // 请求版本信息
-    function req_revision_info(offset) {
+    function req_revision_info() {
         if (socket != null) {
             $('table tbody').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
+            offset = getQueryVariable("offset", 0);
             socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
             data_inited = false;
         }
@@ -255,11 +257,11 @@ $(document).ready(function(){
             $("#checker_selector").selectpicker('val', co_checker_name)
         } 
 
-        req_revision_info(offset)
+        req_revision_info()
     })
 
     $("#checker_selector").on('change', function() {
-        req_revision_info(offset)
+        req_revision_info()
         checker_name = $("#checker_selector").val()
         setCookie('checker', checker_name)
     })
@@ -312,6 +314,17 @@ $(document).scroll(function () {
         });
     }
 })
+
+function getQueryVariable(variable, def_value)
+{
+       var query = window.location.search.substring(1);
+       var vars = query.split("&");
+       for (var i=0;i<vars.length;i++) {
+               var pair = vars[i].split("=");
+               if(pair[0] == variable){return pair[1];}
+       }
+       return def_value;
+}
 
 function setCookie(name, value) {
     var Days = 30;
