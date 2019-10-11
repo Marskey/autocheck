@@ -153,7 +153,7 @@ $(document).ready(function(){
             if (value.report_path !== "") {
                 row += "<a href='" + value.report_path + "'>网页报告</a>"
                 row += ", "
-                row += "<a href='" + value.plog_path + "'>下载原报告文件</a>"
+                row += "<a href='" + value.plog_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
             } else {
                 row += "None"
             }
@@ -250,14 +250,10 @@ $(document).ready(function(){
         $("#checker_selector").html(contain)
         $("#checker_selector").selectpicker('refresh')
 
-        var coosStr = document.cookie;    //获取cookie中的数据
-        var coos = coosStr.split("; ");     //多个值之间用; 分隔
-        for (var i = 0; i < coos.length; i++) {   //获取select写入的id
-            var coo = coos[i].split("=");
-            if ("checker" == coo[0]) {
-                $("#checker_selector").selectpicker('val', coo[1])
-            }
-        }
+        co_checker_name = getCookie('checker')
+        if (co_checker_name != null) {
+            $("#checker_selector").selectpicker('val', co_checker_name)
+        } 
 
         req_revision_info(offset)
     })
@@ -265,7 +261,7 @@ $(document).ready(function(){
     $("#checker_selector").on('change', function() {
         req_revision_info(offset)
         checker_name = $("#checker_selector").val()
-        document.cookie = "checker=" + checker_name
+        setCookie('checker', checker_name)
     })
 
     $("table tbody").on('click', 'button', function() {
@@ -275,6 +271,30 @@ $(document).ready(function(){
             socket.emit('recheck', rev, checker_name)
         }
     })
+
+    $("#local_src_dir").on('change', (e) => {
+        setCookie('local_dir', $("#local_src_dir").val())
+        checkHasLocalDir()
+    })
+
+    local_dir = getCookie('local_dir')
+    $("#local_src_dir").val(local_dir)
+    $("#local_src_dir").attr('title', local_dir)
+    checkHasLocalDir()
+
+    function checkHasLocalDir() {
+        if ($("#local_src_dir").val() == "") {
+            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%;">\
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span\
+                aria-hidden="true">&times;</span></button>\
+        <strong>Warning!</strong> 未输入本地项目路径，这将会影响报告文件索引\
+    </div>')
+            $("#local_src_dir").parent().addClass('has-error')
+        } else {
+            $('.alert').remove()
+            $("#local_src_dir").parent().removeClass('has-error')
+        }
+    }
 });
 
 $(document).scroll(function () {
@@ -292,3 +312,20 @@ $(document).scroll(function () {
         });
     }
 })
+
+function setCookie(name, value) {
+    var Days = 30;
+    var exp = new Date();
+    exp.setTime(exp.getTime() + Days*24*60*60*1000);
+    document.cookie = name + "="+ escape (value) + ";expires=" + exp.toGMTString();
+}
+
+//获取cookie
+function getCookie(name)
+{
+    var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
+    if(arr=document.cookie.match(reg))
+    return unescape(arr[2]);
+    else
+    return null;
+}

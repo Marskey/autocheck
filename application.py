@@ -1,6 +1,6 @@
 # coding=utf-8
 from flask_socketio import SocketIO, emit
-from flask import Flask, render_template, request, send_file, send_from_directory
+from flask import Flask, render_template, request, send_file, send_from_directory, Response, stream_with_context
 from threading import Lock
 from apscheduler.schedulers.background import BackgroundScheduler
 from db_mgr import EasySqlite
@@ -11,6 +11,7 @@ import main
 import printer
 import time
 import os
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -94,9 +95,16 @@ def index():
 
 @app.route('/download/<path:filename>')
 def download(filename):
+    local_dir = request.args.get('local_dir')
     file_path = os.path.join(app.root_path, filename)
-    directory = os.getcwd()  # 假设在当前目录
-    return send_from_directory(directory, filename, as_attachment=True)
+
+    file_origin = open(file_path, "r")
+    content = file_origin.read()
+    file_origin.close()
+
+    dir_change = re.compile(re.escape(config.get_dir_src()), re.IGNORECASE)
+
+    return Response(dir_change.sub(local_dir, content), content_type='application/x-msdownload')
 
 @socketio.on('connect')
 def on_connect():
