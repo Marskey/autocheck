@@ -62,8 +62,6 @@ def background_thread():
 
         if last_rev is None:
             last_rev = 'base'
-        else:
-            last_rev += 1
 
         main.do_check(last_rev, 'head', "")
     except Exception as ex:
