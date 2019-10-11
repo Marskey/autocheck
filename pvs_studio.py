@@ -76,6 +76,13 @@ class PVSStudioChecker(IChecker):
             , output_name))
         if ret != 0:
             return False
+
+        for parent, dirnames, filenames in os.walk(config.get_dir_pvs_report() + "\\" + output_name + "\\sources\\",  followlinks=True):
+            for file in filenames:
+                if file.endswith(".html"):
+                    file_path = os.path.join(parent, file)
+                    self.__convert_gbk_to_utf8(file_path, parent)
+
         return  True
 
     def __gen_src_filters(self, changes):
@@ -140,3 +147,18 @@ class PVSStudioChecker(IChecker):
                 revision = int(filename[1:])
                 db.execute("insert or replace into pvs_reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path), [], False, True)
         return res
+
+    # 为了解决代码源文件是gbk格式，导致显示乱码的问题
+    def __convert_gbk_to_utf8(self, file, dir):
+        target_file = os.path.join(dir, 'tmp')
+        try: 
+            with open(file, 'r', encoding='gbk') as f, open(target_file, 'w', encoding='utf-8') as e:
+                text = f.read() # for small files, for big use chunks
+                e.write(text)
+
+            os.remove(file) # remove old encoding file
+            os.rename(target_file, file) # rename new encoding
+        except UnicodeDecodeError:
+            print('Decode Error')
+        except UnicodeEncodeError:
+            print('Encode Error')
