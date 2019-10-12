@@ -48,6 +48,7 @@ class PVSStudioChecker(IChecker):
                 , "plog_path": "download\\" + plog_file_path
                 , "author": author
                 , "msg": msg
+                , "analysis_files": self.__getAnalysisFiles(plog_file_path)
                 }
 
         return rev_list
@@ -162,3 +163,16 @@ class PVSStudioChecker(IChecker):
             print('Decode Error')
         except UnicodeEncodeError:
             print('Encode Error')
+
+    # 获取plog中有错误的项目文件列表（去重）
+    def __getAnalysisFiles(self, plog) -> list:
+        xmlRoot = etree.parse(plog)
+        sets = set()
+        for analysisLog in xmlRoot.iter('PVS-Studio_Analysis_Log'):
+            project = analysisLog.find('Project').text
+            filename = analysisLog.find('ShortFile').text
+            if filename is None or project is None or len(filename.strip()) == 0:
+                continue
+            key = project + "," + filename
+            sets.add(key)
+        return list(sets)

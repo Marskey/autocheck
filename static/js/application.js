@@ -121,10 +121,10 @@ $(document).ready(function(){
     socket.on('checker_state', function(state) {
         if (state == 1) {
             $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
-            $("table tbody button").attr('disabled', true)
+            $("#table_container button").attr('disabled', true)
         } else {
             $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('开始检查<i class="glyphicon glyphicon-play"></i>')
-            $("table tbody button").attr('disabled', false)
+            $("#table_container button").attr('disabled', false)
 
             if (data_inited) {
                 req_revision_info()
@@ -135,7 +135,7 @@ $(document).ready(function(){
     // 请求版本信息
     function req_revision_info() {
         if (socket != null) {
-            $('table tbody').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
+            $('#table_container').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
             offset = getQueryVariable("offset", 0);
             socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
             data_inited = false;
@@ -144,13 +144,15 @@ $(document).ready(function(){
 
     // 版本信息回包处理
     socket.on('ack_revision_info', (msg) => {
-        $('table tbody').html("");
+        $('#table_container').html("");
         Object.keys(msg.data).sort().reverse().forEach((key) => {
             value = msg.data[key];
+            // 版本号, 时间
             var row = "<tr id='" + key + "'>\
                        <td><a href=''>r" + value.rev + "</a></td>\
                        <td>" + value.time + "</td>"
 
+            // 报告
             row += "<td>"
             if (value.report_path !== "") {
                 row += "<a href='" + value.report_path + "'>网页报告</a>"
@@ -166,17 +168,34 @@ $(document).ready(function(){
 
             row += "</td>"
 
+            // 作者
             row += "<td>"
             row += "<a href=''>" + value.author + "</a>"
             row += "</td>"
-
             row += "</tr>"
+            // newline
+            // 有错误的文件名preview
+            if (value.analysis_files.length != 0) {
+                row += "<tr><td colspan='4'><div style='max-height: 150px; overflow:auto;'> <table class='table table-bordered '> <tbody>"
+                value.analysis_files.forEach(function (proj_file) {
+                    row += "<tr class='warning'>"
+                    var items = proj_file.split(',')
+                    row += "<td style='width:15%'>" + items[0] + "</td>"
+                    if (items.length > 1) {
+                        row += "<td>" + items[1] + "</td>"
+                    }
+                    row += "</tr>"
+                })
+                row += "</tbody></table></div></td><tr>"
+            }
 
+            // newline
+            // commit 日志
             row +="<tr><td colspan='4'>"
-            row +="<p>" + value.msg + "</p>" 
+            row +="<strong>" + value.msg + "</strong>" 
             row +="</td></tr>"
 
-            $('table tbody').append(row);
+            $('#table_container').append(row);
         })
 
         server_time = parseInt(msg.cur_time);
@@ -266,7 +285,7 @@ $(document).ready(function(){
         setCookie('checker', checker_name)
     })
 
-    $("table tbody").on('click', 'button', function() {
+    $("#table_container").on('click', 'button', function() {
         rev = $(this).parent().parent().attr('id')
         checker_name = $("#checker_selector").val()
         if (socket != null) {

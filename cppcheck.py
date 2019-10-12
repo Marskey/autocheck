@@ -46,6 +46,7 @@ class CppChecker(IChecker):
                 , "plog_path": "download\\" + xml_path
                 , "author": author
                 , "msg": msg
+                , "analysis_files": self.__getAnalysisFiles(xml_path)
                 }
 
         return rev_list
@@ -108,3 +109,16 @@ class CppChecker(IChecker):
                 revision = int(filename[1:])
                 db.execute("insert or replace into cppcheck_reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path), [], False, True)
         return res
+
+    # 获取xml中有错误的项目文件列表（去重）
+    def __getAnalysisFiles(self, xml) -> list:
+        sets = set()
+        xmlRoot = etree.parse(xml)
+        errors = xmlRoot.find('errors')
+        for error in errors.iter('error'):
+            location = error.find('location')
+            if location is None:
+                continue
+            path = location.attrib['file0']
+            sets.add(path)
+        return list(sets)
