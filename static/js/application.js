@@ -12,7 +12,7 @@ $(document).ready(function(){
     var sel_page = 0;
     var data_inited = false;
 
-    navbar_h = $(".navbar").outerHeight();
+    navbar_h = $(".navbar").height();
 
     socket.on('disconnect', () => {
         socket.open();
