@@ -9,7 +9,7 @@ class TinySrcController:
         return
 
     @abstractmethod
-    def updateTo(self, revision) -> bool:
+    def updateTo(self, revision) -> int:
         pass
 
     @abstractmethod

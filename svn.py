@@ -11,11 +11,12 @@ class TinySvn(TinySrcController):
         self.url_root = self.__get_url_root()
         return
 
-    def updateTo(self, revision):
+    def updateTo(self, revision) -> int:
         ret = os.system("svn update -r{0} {1}".format(revision, self.local_path))
         if ret == 0:
             print('更新完成')
-        return True
+        rev = subprocess.check_output("svn info --show-item revision {0}".format(self.local_path))
+        return int(rev)
 
     def get_versions_changed(self, start, end) -> dict:
         ret = subprocess.check_output(
@@ -78,6 +79,3 @@ class TinySvn(TinySrcController):
         if url_path.lower().startswith(self.svn_url.lower()):
             return url_path[len(self.svn_url):]
         return ""
-
-# t = TinySvn(config.get_url_svn(), config.get_dir_src())
-# print(t.get_versions_changed(45051, 'head'))

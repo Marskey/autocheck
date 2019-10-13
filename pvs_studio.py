@@ -1,11 +1,12 @@
 from Ichecker import IChecker
+from db_mgr import EasySqlite
 import xml.etree.ElementTree as etree
 import os
 import config
 import re
 import time
 import json
-from db_mgr import EasySqlite
+import progressbar
 import printer
 
 class PVSStudioChecker(IChecker):
@@ -64,7 +65,7 @@ class PVSStudioChecker(IChecker):
 
     def get_result_total_cnt(self)->int:
         db = EasySqlite('rfp.db')
-        return db.execute("select max(rowid) from " + self.CONST_TABLE_NAME + " WHERE path <> '' ", [], False, False)
+        return db.execute("select max(rowid) from " + self.CONST_TABLE_NAME, [], False, False)
 
     # 转换plog成html格式
     def __convert_to_html(self, plog_path)->bool:
@@ -88,6 +89,7 @@ class PVSStudioChecker(IChecker):
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
         num = 0
         for file_path, logs in changes.items():
+            printer.aprint('准备文件:' + file_path)
             xmlRoot = etree.Element('SourceFilesFilters')
             source_files = etree.SubElement(xmlRoot, 'SourceFiles')
             path = etree.SubElement(source_files, 'Path')
@@ -104,6 +106,8 @@ class PVSStudioChecker(IChecker):
             tree = etree.ElementTree(xmlRoot)
             tree.write("temp/{0}.xml".format(num), encoding='utf-8')
             num += 1
+            # 更新进度条用
+            progressbar.add(1)
 
     def __gen_plog(self):
         res = []
@@ -177,6 +181,10 @@ class PVSStudioChecker(IChecker):
 
                     if os.path.exists(output_file_path):
                         os.remove(output_file_path)
+
+                # 更新进度条用
+                progressbar.add(1)
+                printer.aprint(self.get_name() + '完成文件{0}检查'.format(src_path))
 
 
         return res

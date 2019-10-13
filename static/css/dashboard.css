@@ -103,3 +103,10 @@ body {
     display: inline-block;
     border-radius: 50%;
   }
+
+.notransition {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  transition: none !important;
+}

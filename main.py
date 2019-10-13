@@ -7,6 +7,7 @@ import re
 import time
 import printer
 import src_controller_factory
+import progressbar
 
 source_controller = src_controller_factory.getSrcController(
     "svn",
@@ -18,15 +19,23 @@ checker_mgr = CheckerMgr()
 def do_check(rev_start, rev_end, checker_name):
     global source_controller, checker_mgr
 
+    progressbar.set_total(1)
     # 更新代码
-    printer.aprint('更新代码至最新.')
-    source_controller.updateTo(rev_end)
+    printer.aprint('更新代码...')
+    rev_end = source_controller.updateTo(rev_end)
+    progressbar.add(1)
+    printer.aprint('已更新代码至r{0}'.format(rev_end))
 
+    progressbar.set_total(1)
     # 获取版本变化文件集合
-    printer.aprint('获取区间版本差异...')
+    printer.aprint('获取区间版本r{0}至r{1}的差异文件...'.format(rev_start, rev_end))
     changed_files = source_controller.get_versions_changed(rev_start, rev_end)
+    progressbar.add(1)
+    printer.aprint('获取区间版本r{0}至r{1}的差异文件完成'.format(rev_start, rev_end))
 
-    #检查代码
+    # 总数乘以2是因为要先准备一次文件
+    progressbar.set_total(len(changed_files) * 2 * len(checker_mgr.get_checker_name_list()))
+    # 检查代码
     printer.aprint('检查r{0}至r{1}代码中...'.format(rev_start, rev_end))
     if checker_name == "":
         checker_mgr.check(changed_files)
@@ -53,9 +62,3 @@ def get_report_total_cnt(checker_name):
 
 def get_checker_name_list():
     return checker_mgr.get_checker_name_list()
-
-changed_files = source_controller.get_versions_changed(45262, 45262)
-checker = checker_mgr.get_checker('PVS-Studio')
-# print(checker.get_result_total_cnt())
-# print(checker.get_result(0, 20))
-checker.check(changed_files)

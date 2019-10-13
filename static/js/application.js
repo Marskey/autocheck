@@ -1,5 +1,6 @@
 var socket = null
-var navbar_h = $(".navbar").outerHeight();
+var navbar_h = 0;
+var header_h = 0;
 $(document).ready(function(){
     //connect to the socket server.
     var server = 'http://' + document.domain + ':' + location.port;
@@ -11,8 +12,11 @@ $(document).ready(function(){
     var server_time_offset = 0;
     var sel_page = 0;
     var data_inited = false;
-
     navbar_h = $(".navbar").height();
+    header_h = $(".page-header").outerHeight();
+
+    $(".panel-body").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 150);
+    $(".main").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 80)
 
     socket.on('disconnect', () => {
         socket.open();
@@ -40,7 +44,7 @@ $(document).ready(function(){
         log_received.push(data);
         numbers_string = '';
         log_received.slice().reverse().forEach((value) => {
-            numbers_string = numbers_string + '<h4>' + value + '</h4>';
+            numbers_string = numbers_string + '<p>' + value + '</p>';
         })
         $('#log').html(numbers_string);
     });
@@ -55,6 +59,29 @@ $(document).ready(function(){
 
             if (data_inited) {
                 req_revision_info()
+            }
+        }
+    })
+
+    socket.on('checking_progress', function(percent) {
+        if (percent == 0) {
+            $('.progress-bar').removeClass('progress-bar-success');
+            if (!$('.progress').is(":visible")) {
+                // 快速开启
+                $('.progress-bar').addClass('notransition')
+                $('.progress-bar').css('width', percent + '%');
+                $('.progress-bar').removeClass('notransition')
+                $('.progress').slideToggle('fast');
+            }
+        } 
+
+        $('.progress-bar').css('width', percent + '%');
+
+        if (percent == 100) {
+            $('.progress-bar').addClass('progress-bar-success');
+            if ($('.progress').is(":visible")) {
+                // 关闭
+                $('.progress').slideToggle('normal');
             }
         }
     })
@@ -86,7 +113,7 @@ $(document).ready(function(){
 
             // result
             row += "<td>"
-            row += "<a href='" + value.html_path + "'>网页报告</a>"
+            row += "<a target='_blank' href='" + value.html_path + "'>网页报告</a>"
             row += ", "
             row += "<a href='" + value.report_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
             row += "</td>"
@@ -112,7 +139,6 @@ $(document).ready(function(){
         server_time = parseInt(msg.cur_time);
         server_time_offset = server_time - parseInt(new Date().getTime() / 1000)
         show_left_time();
-
         changePagination(msg.offset, msg.total);
         data_inited = true;
     })
@@ -308,8 +334,7 @@ $(document).ready(function(){
 
 $(document).scroll(function () {
     var scroll_h = $(document).scrollTop(); //滚动条高度
-
-    if (scroll_h > navbar_h + 50) { //当滚动条高度 > 侧边栏底部到顶部的高
+    if (scroll_h > navbar_h + header_h) { //当滚动条高度 > 侧边栏底部到顶部的高
         $("#sidepanel").css({
             'position': 'fixed',
             'top': navbar_h,
@@ -321,6 +346,11 @@ $(document).scroll(function () {
         });
     }
 })
+
+$(window).resize(function () {
+    $(".panel-body").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 150);
+    $(".main").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 80)
+    });
 
 function getQueryVariable(variable, def_value)
 {

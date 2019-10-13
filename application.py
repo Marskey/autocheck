@@ -9,6 +9,7 @@ import ctypes
 import config
 import main
 import printer
+import progressbar
 import time
 import os
 import re
@@ -21,11 +22,10 @@ socketio = SocketIO(app)
 
 checker_thread = None
 thread_lock = Lock()
-
 message_logs = []
-
 is_checking = False
-
+# 当前检查进度
+cur_progress = 100
 recheck_rev_start = 0
 recheck_rev_end = 0
 recheck_checker = ""
@@ -50,6 +50,11 @@ def print_handler(msg):
     if len(message_logs) >= 12:
         message_logs.pop(0)
     message_logs.append(msg)
+
+def progressbar_handler(percent):
+    global cur_progress
+    cur_progress = percent
+    socketio.emit('checking_progress', cur_progress)
 
 def stop_thread(_thread):
     _async_raise(_thread.ident, SystemExit)
@@ -108,6 +113,8 @@ def on_connect():
 
     for log in message_logs:
         socketio.emit('server_log', log)
+    global cur_progress
+    progressbar.update(cur_progress)
 
 @socketio.on('disconnect')
 def on_disconnect():
@@ -121,6 +128,7 @@ def on_stop_check():
         stop_thread(checker_thread)
         checker_thread = None
         socketio.emit('checker_state', 0)
+        progressbar.update(100)
     else:
         printer.aprint('后台并没有正在自检\n')
 
@@ -160,6 +168,7 @@ def auto_check():
 
 if __name__ == '__main__':
     printer.set_handler(print_handler)
+    progressbar.set_handler(progressbar_handler)
     scheduler = BackgroundScheduler()
 
     job = scheduler.get_job("auto_check")
