@@ -26,7 +26,8 @@ message_logs = []
 
 is_checking = False
 
-recheck_rev = 0
+recheck_rev_start = 0
+recheck_rev_end = 0
 recheck_checker = ""
 
 def _async_raise(tid, exctype):
@@ -57,13 +58,7 @@ def stop_thread(_thread):
 def background_thread():
     global checker_thread
     try:
-        db = EasySqlite('rfp.db')
-        last_rev = db.execute("SELECT MAX(rev) FROM commit_log", [], False, False)[0][0]
-
-        if last_rev is None:
-            last_rev = 'base'
-
-        main.do_check(last_rev, 'head', "")
+        main.do_check(config.get_check_revision_start(), 'head', "")
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
@@ -72,9 +67,9 @@ def background_thread():
         socketio.emit('checker_state', 0)
 
 def background_thread_recheck():
-    global checker_thread
+    global checker_thread, recheck_rev_start, recheck_rev_end
     try:
-        main.do_check(recheck_rev, recheck_rev, recheck_checker)
+        main.do_check(recheck_rev_start, recheck_rev_end, recheck_checker)
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
@@ -129,16 +124,6 @@ def on_stop_check():
     else:
         printer.aprint('后台并没有正在自检\n')
 
-@socketio.on('start_check')
-def on_start_check():
-    global checker_thread
-    if checker_thread is None:
-        printer.aprint('开始自检\n')
-        socketio.emit('checker_state', 1)
-        checker_thread = socketio.start_background_task(target=background_thread)
-    else:
-        printer.aprint('正在自检\n')
-
 @socketio.on('req_revision_info')
 def req_revision_info(checker_name, offset, count):
     # 一页个数最大不超过20个
@@ -150,13 +135,14 @@ def req_revision_info(checker_name, offset, count):
     msg = {"offset": offset, "total": total, "data": rev_list, "cur_time": time.time()}
     emit('ack_revision_info', msg)
 
-@socketio.on('recheck')
-def recheck(rev, checker_name):
-    global checker_thread, recheck_rev, recheck_checker
+@socketio.on('start_check')
+def start_check(rev_start, rev_end, checker_name):
+    global checker_thread, recheck_rev_start, recheck_rev_end, recheck_checker
     if checker_thread is None:
         printer.aprint('开始自检\n')
         socketio.emit('checker_state', 1)
-        recheck_rev = rev
+        recheck_rev_start = rev_start
+        recheck_rev_end = rev_end
         recheck_checker = checker_name
         checker_thread = socketio.start_background_task(target=background_thread_recheck)
     else:
@@ -175,10 +161,6 @@ def auto_check():
 if __name__ == '__main__':
     printer.set_handler(print_handler)
     scheduler = BackgroundScheduler()
-
-    # 如果没有表格创建表格
-    db = EasySqlite('rfp.db')
-    db.execute("create table if not exists commit_log (rev integer primary key, author text, msg text) ", [], False, False)
 
     job = scheduler.get_job("auto_check")
     if job is not None:

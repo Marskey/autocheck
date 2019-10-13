@@ -2,6 +2,7 @@ import subprocess
 import xml.etree.ElementTree as etree
 import os
 from Isrc_controller import TinySrcController
+import config
 
 
 class TinySvn(TinySrcController):
@@ -16,20 +17,27 @@ class TinySvn(TinySrcController):
             print('更新完成')
         return True
 
-    def get_versions_changed(self, start, end):
+    def get_versions_changed(self, start, end) -> dict:
         ret = subprocess.check_output(
             'svn log -v -r {0}:{1} "{2}" --xml '.format(start, end, self.local_path))
         root = etree.fromstring(ret)
+
         res = {}
         for logentry in root.iter('logentry'):
             revision = logentry.attrib['revision']
-            res[revision] = []
+            author   = logentry.find('author').text
+            msg      = logentry.find('msg').text
+
             for svnPath in logentry.iter('path'):
                 action = svnPath.attrib['action'].lower()
                 if action != 'd':
                     local_fpath = self.__get_local_relative_path(svnPath.text)
                     if len(local_fpath) != 0:
-                        res[revision].append(local_fpath)
+                        ext = os.path.splitext(local_fpath)[-1]
+                        if ext == ".h" or ext == ".cpp" or ext == ".hpp":
+                            if not local_fpath in res:
+                                res[local_fpath] = []
+                            res[local_fpath].append({"rev": revision, "author":author, "msg":msg})
         return res
 
     def get_version_log(self, start, end):
@@ -70,3 +78,6 @@ class TinySvn(TinySrcController):
         if url_path.lower().startswith(self.svn_url.lower()):
             return url_path[len(self.svn_url):]
         return ""
+
+# t = TinySvn(config.get_url_svn(), config.get_dir_src())
+# print(t.get_versions_changed(45051, 'head'))

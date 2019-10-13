@@ -33,6 +33,204 @@ $(document).ready(function(){
     socket.on('connect', () => {
     })
 
+    socket.on('server_log', function (data) {
+        if (log_received.length > 12) {
+            log_received.shift()
+        }
+        log_received.push(data);
+        numbers_string = '';
+        log_received.slice().reverse().forEach((value) => {
+            numbers_string = numbers_string + '<h4>' + value + '</h4>';
+        })
+        $('#log').html(numbers_string);
+    });
+
+    socket.on('checker_state', function(state) {
+        if (state == 1) {
+            $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
+            $("#table_container button").attr('disabled', true)
+        } else {
+            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('开始检查<i class="glyphicon glyphicon-play"></i>')
+            $("#table_container button").attr('disabled', false)
+
+            if (data_inited) {
+                req_revision_info()
+            }
+        }
+    })
+
+    // 请求版本信息
+    function req_revision_info() {
+        if (socket != null) {
+            $('#table_container').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
+            offset = getQueryVariable("offset", 0);
+            socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
+            data_inited = false;
+        }
+    }
+
+    // 版本信息回包处理
+    socket.on('ack_revision_info', (msg) => {
+        $('#table_container').html("");
+        Object.keys(msg.data).sort().reverse().forEach((key) => {
+            value = msg.data[key];
+            var row = "<tr>"
+            // project
+            row += "<td><strong>" + value.project + "</strong></td>"
+
+            // file
+            row += "<td>" + value.file + "</td>"
+
+            // time
+            row += "<td>" + value.time + "</td>"
+
+            // result
+            row += "<td>"
+            row += "<a href='" + value.html_path + "'>网页报告</a>"
+            row += ", "
+            row += "<a href='" + value.report_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
+            row += "</td>"
+
+            // newline
+            // log
+            if (value.log.length != 0) {
+                row += "<tr><td colspan='4'><div style='max-height: 150px; overflow:auto;'> <table class='table table-bordered '> <tbody>"
+                value.log.forEach(function (pre_log) {
+                    log_json = JSON.parse(pre_log)
+                    row += "<tr class='warning'>"
+                    row += "<td style='width:15%'>" + log_json.rev + "</td>"
+                    row += "<td>" + log_json.author + "</td>"
+                    row += "<td>" + log_json.msg + "</td>"
+                    row += "</tr>"
+                })
+                row += "</tbody></table></div></td><tr>"
+            }
+
+            $('#table_container').append(row);
+        })
+
+        server_time = parseInt(msg.cur_time);
+        server_time_offset = server_time - parseInt(new Date().getTime() / 1000)
+        show_left_time();
+
+        changePagination(msg.offset, msg.total);
+        data_inited = true;
+    })
+
+    $("#check_btn").on('click', function () {
+        if (socket != null) {
+            if ($(this).hasClass("btn-success")) {
+                checker_name = $("#checker_selector").val()
+                socket.emit('start_check', $('#rev_start').val(), $('#rev_end').val(), checker_name)
+            } else {
+                socket.emit('stop_check')
+            }
+        }
+    })
+
+    InterValObj = window.setInterval(show_left_time, 1000);
+    function show_left_time() {
+        // 9, 12, 15, 18, 21
+        var left_sec = 0;
+        var cur_time = new Date()
+        var event = new Date();
+        if (cur_time.getHours() < 9) {
+            event.setHours(9, 0, 0);
+        } else if (cur_time.getHours() < 12) {
+            event.setHours(12, 0, 0);
+        } else if (cur_time.getHours() < 15) {
+            event.setHours(15, 0, 0);
+        } else if (cur_time.getHours() < 18) {
+            event.setHours(18, 0, 0);
+        } else if (cur_time.getHours() < 21) {
+            event.setHours(21, 0, 0);
+        } else {
+            event.setDate(event.getDate() + 1)
+            event.setHours(9, 0, 0);
+        }
+
+        left_sec = parseInt((event - cur_time + server_time_offset) / 1000);
+
+        var htmlstr = "<h4>距离下次自检还有: ";
+        left_sec = left_sec % (24 * 3600);
+        var hour = parseInt(left_sec / 3600);
+        if (hour != 0) {
+            htmlstr += hour + "小时 ";
+        }
+
+        left_sec %= 3600;
+        var min = parseInt(left_sec / 60);
+        if (min != 0) {
+            htmlstr += min + "分钟 ";
+        }
+
+        left_sec %= 60;
+        var sec = left_sec;
+        htmlstr += sec + "秒 ";
+
+        htmlstr += "</h4>"
+
+        $("#left_time").html(htmlstr);
+    }
+
+    socket.on('ack_checker_list', (msg) => {
+        var contain = ""
+        msg.forEach(function(value) {
+            contain += "<option>"
+            contain += value
+            contain += "</option>"
+        })
+        $("#checker_selector").html(contain)
+        $("#checker_selector").selectpicker('refresh')
+
+        co_checker_name = getCookie('checker')
+        if (co_checker_name != null) {
+            $("#checker_selector").selectpicker('val', co_checker_name)
+        } 
+
+        req_revision_info()
+    })
+
+    $("#checker_selector").on('change', function() {
+        req_revision_info()
+        checker_name = $(this).val()
+        setCookie('checker', checker_name)
+    })
+
+    $('#rev_start').on('change', function() {
+        setCookie('rev_start', $(this).val())
+    })
+
+    $('#rev_end').on('change', function() {
+        setCookie('rev_end', $(this).val())
+    })
+
+    $("#local_src_dir").on('change', (e) => {
+        setCookie('local_dir', $("#local_src_dir").val())
+        checkHasLocalDir()
+    })
+
+    local_dir = getCookie('local_dir')
+    $("#local_src_dir").val(local_dir)
+    $("#local_src_dir").attr('title', local_dir)
+    checkHasLocalDir()
+    $("#rev_start").val(getCookie('rev_start'))
+    $("#rev_end").val(getCookie('rev_end'))
+
+    function checkHasLocalDir() {
+        if ($("#local_src_dir").val() == "") {
+            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%; z-index:10">\
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span\
+                aria-hidden="true">&times;</span></button>\
+        <strong>Warning!</strong> 未输入本地项目路径，这将会影响报告文件索引\
+    </div>')
+            $("#local_src_dir").parent().addClass('has-error')
+        } else {
+            $('.alert').remove()
+            $("#local_src_dir").parent().removeClass('has-error')
+        }
+    }
+
     // 分页显示逻辑处理
     function changePagination(offset, total) {
         var visual_count = 9;
@@ -106,216 +304,6 @@ $(document).ready(function(){
         $('#pagination').html(first_page + pre_page + contain + next_page + last_page)
     }
 
-    socket.on('server_log', function (data) {
-        if (log_received.length > 12) {
-            log_received.shift()
-        }
-        log_received.push(data);
-        numbers_string = '';
-        log_received.slice().reverse().forEach((value) => {
-            numbers_string = numbers_string + '<h4>' + value + '</h4>';
-        })
-        $('#log').html(numbers_string);
-    });
-
-    socket.on('checker_state', function(state) {
-        if (state == 1) {
-            $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
-            $("#table_container button").attr('disabled', true)
-        } else {
-            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('开始检查<i class="glyphicon glyphicon-play"></i>')
-            $("#table_container button").attr('disabled', false)
-
-            if (data_inited) {
-                req_revision_info()
-            }
-        }
-    })
-
-    // 请求版本信息
-    function req_revision_info() {
-        if (socket != null) {
-            $('#table_container').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
-            offset = getQueryVariable("offset", 0);
-            socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
-            data_inited = false;
-        }
-    }
-
-    // 版本信息回包处理
-    socket.on('ack_revision_info', (msg) => {
-        $('#table_container').html("");
-        Object.keys(msg.data).sort().reverse().forEach((key) => {
-            value = msg.data[key];
-            // 版本号, 时间
-            var row = "<tr id='" + key + "'>\
-                       <td><a href=''>r" + value.rev + "</a></td>\
-                       <td>" + value.time + "</td>"
-
-            // 报告
-            row += "<td>"
-            if (value.report_path !== "") {
-                row += "<a href='" + value.report_path + "'>网页报告</a>"
-                row += ", "
-                row += "<a href='" + value.plog_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
-            } else {
-                row += "None"
-            }
-
-            row += "<button class='btn btn-info pull-right' type='button'>\
-                            重检 <i class='glyphicon glyphicon-repeat'></i>\
-                        </button>"
-
-            row += "</td>"
-
-            // 作者
-            row += "<td>"
-            row += "<a href=''>" + value.author + "</a>"
-            row += "</td>"
-            row += "</tr>"
-            // newline
-            // 有错误的文件名preview
-            if (value.analysis_files.length != 0) {
-                row += "<tr><td colspan='4'><div style='max-height: 150px; overflow:auto;'> <table class='table table-bordered '> <tbody>"
-                value.analysis_files.forEach(function (proj_file) {
-                    row += "<tr class='warning'>"
-                    var items = proj_file.split(',')
-                    row += "<td style='width:15%'>" + items[0] + "</td>"
-                    if (items.length > 1) {
-                        row += "<td>" + items[1] + "</td>"
-                    }
-                    row += "</tr>"
-                })
-                row += "</tbody></table></div></td><tr>"
-            }
-
-            // newline
-            // commit 日志
-            row +="<tr><td colspan='4'>"
-            row +="<strong>" + value.msg + "</strong>" 
-            row +="</td></tr>"
-
-            $('#table_container').append(row);
-        })
-
-        server_time = parseInt(msg.cur_time);
-        server_time_offset = server_time - parseInt(new Date().getTime() / 1000)
-        show_left_time();
-
-        changePagination(msg.offset, msg.total);
-        data_inited = true;
-    })
-
-    $("#check_btn").on('click', function () {
-        if (socket != null) {
-            if ($(this).hasClass("btn-success")) {
-                socket.emit('start_check')
-            } else {
-                socket.emit('stop_check')
-            }
-        }
-    })
-
-    InterValObj = window.setInterval(show_left_time, 1000);
-    function show_left_time() {
-        // 9, 12, 15, 18, 21
-        var left_sec = 0;
-        var cur_time = new Date()
-        var event = new Date();
-        if (cur_time.getHours() < 9) {
-            event.setHours(9, 0, 0);
-        } else if (cur_time.getHours() < 12) {
-            event.setHours(12, 0, 0);
-        } else if (cur_time.getHours() < 15) {
-            event.setHours(15, 0, 0);
-        } else if (cur_time.getHours() < 18) {
-            event.setHours(18, 0, 0);
-        } else if (cur_time.getHours() < 21) {
-            event.setHours(21, 0, 0);
-        } else {
-            event.setDate(event.getDate() + 1)
-            event.setHours(9, 0, 0);
-        }
-
-        left_sec = parseInt((event - cur_time + server_time_offset) / 1000);
-
-        var htmlstr = "<h4>距离下次自检还有: ";
-        left_sec = left_sec % (24 * 3600);
-        var hour = parseInt(left_sec / 3600);
-        if (hour != 0) {
-            htmlstr += hour + "小时 ";
-        }
-
-        left_sec %= 3600;
-        var min = parseInt(left_sec / 60);
-        if (min != 0) {
-            htmlstr += min + "分钟 ";
-        }
-
-        left_sec %= 60;
-        var sec = left_sec;
-        htmlstr += sec + "秒 ";
-
-        htmlstr += "</h4>"
-
-        $("#left_time").html(htmlstr);
-    }
-
-    socket.on('ack_checker_list', (msg) => {
-        var contain = ""
-        msg.forEach(function(value) {
-            contain += "<option>"
-            contain += value
-            contain += "</option>"
-        })
-        $("#checker_selector").html(contain)
-        $("#checker_selector").selectpicker('refresh')
-
-        co_checker_name = getCookie('checker')
-        if (co_checker_name != null) {
-            $("#checker_selector").selectpicker('val', co_checker_name)
-        } 
-
-        req_revision_info()
-    })
-
-    $("#checker_selector").on('change', function() {
-        req_revision_info()
-        checker_name = $("#checker_selector").val()
-        setCookie('checker', checker_name)
-    })
-
-    $("#table_container").on('click', 'button', function() {
-        rev = $(this).parent().parent().attr('id')
-        checker_name = $("#checker_selector").val()
-        if (socket != null) {
-            socket.emit('recheck', rev, checker_name)
-        }
-    })
-
-    $("#local_src_dir").on('change', (e) => {
-        setCookie('local_dir', $("#local_src_dir").val())
-        checkHasLocalDir()
-    })
-
-    local_dir = getCookie('local_dir')
-    $("#local_src_dir").val(local_dir)
-    $("#local_src_dir").attr('title', local_dir)
-    checkHasLocalDir()
-
-    function checkHasLocalDir() {
-        if ($("#local_src_dir").val() == "") {
-            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%; z-index:10">\
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span\
-                aria-hidden="true">&times;</span></button>\
-        <strong>Warning!</strong> 未输入本地项目路径，这将会影响报告文件索引\
-    </div>')
-            $("#local_src_dir").parent().addClass('has-error')
-        } else {
-            $('.alert').remove()
-            $("#local_src_dir").parent().removeClass('has-error')
-        }
-    }
 });
 
 $(document).scroll(function () {

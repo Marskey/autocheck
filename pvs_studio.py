@@ -4,14 +4,18 @@ import os
 import config
 import re
 import time
+import json
 from db_mgr import EasySqlite
 import printer
 
 class PVSStudioChecker(IChecker):
+    CONST_TABLE_NAME = "pvs_reports2"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         db = EasySqlite('rfp.db')
-        db.execute("create table if not exists pvs_reports (rev integer primary key, path text, time timestamp default current_timestamp not null) ")
+        db.execute("create table if not exists " + self.CONST_TABLE_NAME +
+                   "(project text NOT NULL, file text, file_path text, time timestamp default current_timestamp not null, report_path text, log text); ")
     
     def get_name(self)->str:
         return "PVS-Studio"
@@ -23,62 +27,56 @@ class PVSStudioChecker(IChecker):
         printer.aprint(self.get_name() + '生成plog...')
         self.__gen_plog()
 
-    def get_result(self, offset, count)->dict:
-        rev_list = {} 
+    def get_result(self, offset, count)->list:
+        rev_list = []
         db = EasySqlite('rfp.db')
-        for row in db.execute("SELECT * FROM pvs_reports left JOIN commit_log using (rev) WHERE path <> '' ORDER BY rev DESC LIMIT {0}, {1}".format(offset, count), [], False, False):
-            revision       = row[0]
-            plog_file_path = row[1]
-            str_time       = row[2]
-            author         = row[3]
-            msg            = row[4]
+        for row in db.execute("SELECT rowid, * FROM " + self.CONST_TABLE_NAME + " WHERE report_path <> '' LIMIT {0}, {1}".format(offset, count), [], False, False):
+            rowid = row[0]
+            project = row[1]
+            file_name = row[2]
+            file_path = row[3]
+            time = row[4]
+            report_path = row[5]
+            log = row[6]
 
-            report_file_path = ""
-            if not plog_file_path == "":
-                if os.path.exists(plog_file_path): 
-                    report_file_path = "{0}\\r{1}\\index.html".format(config.get_dir_pvs_report(), revision)
-                    if not os.path.exists(report_file_path):
-                        revs = []
-                        revs.append(revision)
-                        self.__convert_to_html(revs)
+            html_file_path = ""
+            if not report_path == "":
+                if not os.path.exists(report_path): 
+                    print("cannot find report file: " + report_path)
+                    continue
+                report_filename = os.path.splitext(report_path)[0].split("\\")[-1]
+                html_file_path = "{0}\\{1}\\index.html".format(config.get_dir_pvs_report(), report_filename)
+                # 如果没有网页报告则创建一个
+                if not os.path.exists(html_file_path):
+                    self.__convert_to_html(report_path)
 
-            rev_list[revision] = {"rev": revision
-                , "time": str_time
-                , "report_path": report_file_path
-                , "plog_path": "download\\" + plog_file_path
-                , "author": author
-                , "msg": msg
-                , "analysis_files": self.__getAnalysisFiles(plog_file_path)
-                }
+            rev_list.append({
+                  "rowid": rowid
+                , "project": project
+                , "file": file_name
+                , "time": time
+                , "html_path" : html_file_path
+                , "report_path": "download\\" + report_path
+                , "log": [log]
+                })
 
         return rev_list
 
     def get_result_total_cnt(self)->int:
         db = EasySqlite('rfp.db')
-        return db.execute("select count(rev) from pvs_reports WHERE path <> '' ", [], False, False)
+        return db.execute("select max(rowid) from " + self.CONST_TABLE_NAME + " WHERE path <> '' ", [], False, False)
 
     # 转换plog成html格式
-    def __convert_to_html(self, revisions = [])->bool:
+    def __convert_to_html(self, plog_path)->bool:
         os.system("if not exist {0} mkdir {0}".format(config.get_dir_pvs_report()))
-        input_plogs = ""
-        revision_min = 99999999
-        revision_max = 0
-        for revision in revisions:
-            input_plogs += "{0}\\r{1}.plog".format(config.get_dir_pvs_plogs(), revision) + " "
-            revision_min = min(revision_min, int(revision))
-            revision_max = max(revision_max, int(revision))
-
-        output_name = "r{0}-r{1}".format(revision_min, revision_max)
-        if len(revisions) == 1:
-            output_name = "r{0}".format(revision_min)
-
-        ret = os.system("PlogConverter.exe {0} -o {1} -t fullHtml -n {2}".format(input_plogs
+        filename = os.path.splitext(plog_path)[0].split("\\")[-1]
+        ret = os.system("PlogConverter.exe {0} -o {1} -t fullHtml -n {2}".format(plog_path
             , config.get_dir_pvs_report()
-            , output_name))
+            , filename))
         if ret != 0:
             return False
 
-        for parent, dirnames, filenames in os.walk(config.get_dir_pvs_report() + "\\" + output_name + "\\sources\\",  followlinks=True):
+        for parent, dirnames, filenames in os.walk(config.get_dir_pvs_report() + "\\" + filename + "\\sources\\",  followlinks=True):
             for file in filenames:
                 if file.endswith(".html"):
                     file_path = os.path.join(parent, file)
@@ -88,21 +86,24 @@ class PVSStudioChecker(IChecker):
 
     def __gen_src_filters(self, changes):
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
-        for revision, paths in changes.items():
+        num = 0
+        for file_path, logs in changes.items():
             xmlRoot = etree.Element('SourceFilesFilters')
             source_files = etree.SubElement(xmlRoot, 'SourceFiles')
-            for relPath in paths:
-                ext = os.path.splitext(relPath)[-1]
-                if ext == ".h" or ext == ".cpp" or ext == ".hpp":
-                    path = etree.SubElement(source_files, 'Path')
-                    path.text = relPath
+            path = etree.SubElement(source_files, 'Path')
+            path.text = file_path
             sourcesRoot = etree.SubElement(xmlRoot, 'SourcesRoot')
             sourcesRoot.text = config.get_dir_src()
+            logsXml = etree.SubElement(xmlRoot, 'logs')
+            for log in logs:
+                logXml = etree.SubElement(logsXml, 'log')
+                logXml.set('rev', log['rev'])
+                logXml.set('author', log['author'])
+                logXml.set('msg', log['msg'])
 
-            data = etree.tostring(xmlRoot).decode('utf-8')
-            file = open("temp/r{}.xml".format(revision), "w")
-            file.write(data)
-            file.close
+            tree = etree.ElementTree(xmlRoot)
+            tree.write("temp/{0}.xml".format(num), encoding='utf-8')
+            num += 1
 
     def __gen_plog(self):
         res = []
@@ -112,10 +113,11 @@ class PVSStudioChecker(IChecker):
             for file in filenames:
                 file_path = os.path.join(parent, file)
                 filename = os.path.splitext(file)[0]
-                output_file_path = "{0}\\{1}.plog".format(
+                output_file_path = "{0}\\file{1}.plog".format(
                     config.get_dir_pvs_plogs()
                     , filename)
-                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --configuration "Release" -f "{2}"'.format(config.get_dir_sln()
+
+                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --platform "win32" --configuration "Release" -f "{2}"'.format(config.get_dir_sln()
                     , output_file_path
                     , file_path))
 
@@ -142,11 +144,41 @@ class PVSStudioChecker(IChecker):
                 # if (ret & 1024) / 1024 == 1:
                 #     print("LicenseRenewal")
 
+                has_error = True
                 if ret == 0:
-                    output_file_path = ""
+                    has_error = False
 
-                revision = int(filename[1:])
-                db.execute("insert or replace into pvs_reports values ({0}, '{1}', current_timestamp);".format(revision, output_file_path), [], False, True)
+                logs_json = []
+                xmlRoot = etree.parse(file_path)
+                logsRoot = xmlRoot.find('logs')
+                for log in logsRoot.iter('log'):
+                    log_json = {"rev": log.attrib["rev"], "author": log.attrib["author"], "msg": log.attrib["msg"]}
+                    logs_json.append(log_json)
+                pathEle = xmlRoot.find('./SourceFiles/Path')
+                src_path = pathEle.text
+
+                if has_error:
+                    plogXmlRoot = etree.parse(output_file_path)
+                    analysisLog = plogXmlRoot.find('PVS-Studio_Analysis_Log')
+                    project = analysisLog.find('Project').text
+                    filename = analysisLog.find('ShortFile').text
+
+                    db.execute("insert into "
+                               + self.CONST_TABLE_NAME
+                               + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, json.dumps(log_json)), False, True)
+                else:
+                    db.execute("delete from "
+                               + self.CONST_TABLE_NAME
+                               + " where file_path = ?"
+                               , [src_path]
+                               , False
+                               , True
+                    )
+
+                    if os.path.exists(output_file_path):
+                        os.remove(output_file_path)
+
+
         return res
 
     # 为了解决代码源文件是gbk格式，导致显示乱码的问题
@@ -163,16 +195,3 @@ class PVSStudioChecker(IChecker):
             print('Decode Error')
         except UnicodeEncodeError:
             print('Encode Error')
-
-    # 获取plog中有错误的项目文件列表（去重）
-    def __getAnalysisFiles(self, plog) -> list:
-        xmlRoot = etree.parse(plog)
-        sets = set()
-        for analysisLog in xmlRoot.iter('PVS-Studio_Analysis_Log'):
-            project = analysisLog.find('Project').text
-            filename = analysisLog.find('ShortFile').text
-            if filename is None or project is None or len(filename.strip()) == 0:
-                continue
-            key = project + "," + filename
-            sets.add(key)
-        return list(sets)

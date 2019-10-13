@@ -10,6 +10,8 @@ DIR_PVS_REPORTS = 'static\\reports\\pvs_reports'
 DIR_CPP_CHECK_RES = 'check_results\\cppcheck_res'
 DIR_CPP_CHECK_REPORTS = 'static\\reports\\cppcheck_reports'
 
+REVISION_START = 45051
+
 def get_url_svn():
     return URL_SVN
 
@@ -30,3 +32,6 @@ def get_dir_cpp_check_res():
 
 def get_dir_cpp_check_report():
     return DIR_CPP_CHECK_REPORTS
+
+def get_check_revision_start():
+    return REVISION_START

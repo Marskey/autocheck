@@ -18,28 +18,22 @@ checker_mgr = CheckerMgr()
 def do_check(rev_start, rev_end, checker_name):
     global source_controller, checker_mgr
 
+    # 更新代码
+    printer.aprint('更新代码至最新.')
+    source_controller.updateTo(rev_end)
+
     # 获取版本变化文件集合
     printer.aprint('获取区间版本差异...')
     changed_files = source_controller.get_versions_changed(rev_start, rev_end)
 
-    # 更新代码
-    for revision, values in changed_files.items():
-        printer.aprint('更新r{0}代码...'.format(revision))
-        source_controller.updateTo(revision)
-        rev_changes = {}
-        rev_changes[revision] = values
-        #检查代码
-        printer.aprint('检查r{0}代码中...'.format(revision))
-        if checker_name == "":
-            checker_mgr.check(rev_changes)
-        else:
-            checker = checker_mgr.get_checker(checker_name)
-            checker.check(rev_changes)
-        printer.aprint('检查r{0}代码结束'.format(revision))
-        save_commit_log(revision, revision)
+    #检查代码
+    printer.aprint('检查r{0}至r{1}代码中...'.format(rev_start, rev_end))
+    if checker_name == "":
+        checker_mgr.check(changed_files)
+    else:
+        checker = checker_mgr.get_checker(checker_name)
+        checker.check(changed_files)
 
-    printer.aprint('更新代码至最新.')
-    source_controller.updateTo('head')
     printer.aprint('全部检查完毕.')
 
 def get_revisions_list(checker_name, offset, count):
@@ -57,17 +51,11 @@ def get_report_total_cnt(checker_name):
         return 0
     return code_checker.get_result_total_cnt()
 
-def save_commit_log(rev_start, rev_end):
-    global source_controller
-    res = source_controller.get_version_log(rev_start, rev_end)
-    db = EasySqlite('rfp.db')
-    for revision, values in res.items():
-        db.execute("insert or replace into commit_log values ({0}, '{1}', '{2}');".format(
-            revision, values['author'], values['msg']), [], False, True)
-
 def get_checker_name_list():
     return checker_mgr.get_checker_name_list()
 
-# changed_files = source_controller.get_versions_changed(45262, 45262)
-# checker = checker_mgr.get_checker('cppcheck')
-# checker.check(changed_files)
+changed_files = source_controller.get_versions_changed(45262, 45262)
+checker = checker_mgr.get_checker('PVS-Studio')
+# print(checker.get_result_total_cnt())
+# print(checker.get_result(0, 20))
+checker.check(changed_files)

@@ -10,7 +10,7 @@ class CheckerMgr:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__register_checker(PVSStudioChecker())
-        self.__register_checker(CppChecker())
+        # self.__register_checker(CppChecker())
 
     def check(self, changed_files):
         global checkers
