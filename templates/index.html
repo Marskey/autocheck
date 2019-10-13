@@ -10,7 +10,6 @@
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
         integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="static/css/dashboard.css" rel="stylesheet">
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
@@ -18,6 +17,14 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
     <script type="text/javascript" src="static/js/application.js"></script>
+    <style type="text/css">
+        .notransition {
+            -webkit-transition: none !important;
+            -moz-transition: none !important;
+            -o-transition: none !important;
+            transition: none !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -34,7 +41,8 @@
                 <div class='form-group'>
                     本地项目目录: <input type="text" id="local_src_dir" class='form-control ' />
                 </div>
-                <input type="button" class="btn btn-warning " onclick="$('#helpModal').modal({keyboard: false});" value="Help"/>
+                <input type="button" class="btn btn-warning " onclick="$('#helpModal').modal({keyboard: false});"
+                    value="Help" />
             </form>
         </div>
     </nav>
@@ -63,19 +71,21 @@
                     </div>
                 </div>
             </div>
-            <div id="sidepanel" class="col-xs-4 col-sm-4 col-md-4"  style="right: 15px; ">
+            <div id="sidepanel" class="col-xs-4 col-sm-4 col-md-4" style="right: 15px; ">
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <form class="form-inline">
                             <div style="width: 40%;">
-                            <button id="check_btn" class="btn btn-success form-control" type="button">
-                                开始检查<i class="glyphicon glyphicon-play"></i>
-                            </button>
+                                <button id="check_btn" class="btn btn-success form-control" type="button">
+                                    开始检查<i class="glyphicon glyphicon-play"></i>
+                                </button>
                             </div>
                             <div style="width: 59%;">
-                                <input id="rev_start" type="text" class="form-control" style="width: 45%;" placeholder="Revision Start">
+                                <input id="rev_start" type="text" class="form-control" style="width: 45%;"
+                                    placeholder="Revision Start">
                                 :
-                                <input id="rev_end" type="text" class="form-control" style="width: 45%;" placeholder="Revision End" value="head">
+                                <input id="rev_end" type="text" class="form-control" style="width: 45%;"
+                                    placeholder="Revision End" value="head">
                             </div>
                         </form>
                     </div>
@@ -84,8 +94,7 @@
                         </div>
                     </div>
                     <div class="progress" style="border-radius: 0; margin-bottom: 0px; height: 7px;" hidden>
-                        <div class="progress-bar" 
-                            style="width: 60%;">
+                        <div class="progress-bar" style="width: 60%;">
                         </div>
                     </div>
                     <div class="panel-footer">
@@ -109,7 +118,7 @@
                 <pre><strong>提示 </strong>本工具利用的是第三方的检查工具例如<a href="https://www.viva64.com/en/pvs-studio/">PVS-Studio</a>, <a href="http://cppcheck.sourceforge.net/">cppcheck</a>检查结果与本人无瓜!</pre>
                 <p>上方的检查器即为第三方的检查器，选择其一来展示其检查结果。</p>
                 <p>上方的本地项目目录中请填写使用者本机的对应项目的根目录地址（.sln所存在目录）当点击<a>下载原报告文件</a>时用来替换原报告文件的代码地址方便定位（cppcheck的报告暂时无用）</p>
-                <p>左边的表格内容为当前版本号对应报告分析，表格从左到右从上到下依次为 
+                <p>左边的表格内容为当前版本号对应报告分析，表格从左到右从上到下依次为
                     <ul>
                         <li><strong>Rev.</strong> 为版本号</li>
                         <li><strong>Time</strong> 检查器完成检查的时间</li>
