@@ -10,7 +10,7 @@ import progressbar
 import printer
 
 class PVSStudioChecker(IChecker):
-    CONST_TABLE_NAME = "pvs_reports2"
+    CONST_TABLE_NAME = "pvs_reports"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
