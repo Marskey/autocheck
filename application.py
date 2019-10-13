@@ -78,6 +78,7 @@ def background_thread_recheck():
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
+        progressbar.update(-100)
     with thread_lock:
         checker_thread = None
         socketio.emit('checker_state', 0)
@@ -128,7 +129,7 @@ def on_stop_check():
         stop_thread(checker_thread)
         checker_thread = None
         socketio.emit('checker_state', 0)
-        progressbar.update(100)
+        progressbar.update(-100)
     else:
         printer.aprint('后台并没有正在自检\n')
 

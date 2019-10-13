@@ -161,6 +161,14 @@ class PVSStudioChecker(IChecker):
                 pathEle = xmlRoot.find('./SourceFiles/Path')
                 src_path = pathEle.text
 
+                db.execute("delete from "
+                           + self.CONST_TABLE_NAME
+                           + " where file_path = ?"
+                           , [src_path]
+                           , False
+                           , True
+                    )
+
                 if has_error:
                     plogXmlRoot = etree.parse(output_file_path)
                     analysisLog = plogXmlRoot.find('PVS-Studio_Analysis_Log')
@@ -170,14 +178,6 @@ class PVSStudioChecker(IChecker):
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
                                + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, json.dumps(log_json)), False, True)
-                else:
-                    db.execute("delete from "
-                               + self.CONST_TABLE_NAME
-                               + " where file_path = ?"
-                               , [src_path]
-                               , False
-                               , True
-                    )
 
                     if os.path.exists(output_file_path):
                         os.remove(output_file_path)

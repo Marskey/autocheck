@@ -15,8 +15,7 @@ $(document).ready(function(){
     navbar_h = $(".navbar").height();
     header_h = $(".page-header").outerHeight();
 
-    $(".panel-body").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 150);
-    $(".main").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 80)
+    resetLogPanelHeight()
 
     socket.on('disconnect', () => {
         socket.open();
@@ -52,11 +51,12 @@ $(document).ready(function(){
     socket.on('checker_state', function(state) {
         if (state == 1) {
             $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
-            $("#table_container button").attr('disabled', true)
+            $('#rev_start').attr('disabled', true)
+            $('#rev_end').attr('disabled', true)
         } else {
             $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('开始检查<i class="glyphicon glyphicon-play"></i>')
-            $("#table_container button").attr('disabled', false)
-
+            $('#rev_start').attr('disabled', false)
+            $('#rev_end').attr('disabled', false)
             if (data_inited) {
                 req_revision_info()
             }
@@ -64,24 +64,42 @@ $(document).ready(function(){
     })
 
     socket.on('checking_progress', function(percent) {
+        var progressbar_color = "progress-bar-success"
+        var board_color = "#ddd"
+        var has_excep = false
+
+        if (percent < 0) {
+            percent = Math.abs(percent)
+            has_excep = true
+        }
+
         if (percent == 0) {
-            $('.progress-bar').removeClass('progress-bar-success');
-            if (!$('.progress').is(":visible")) {
-                // 快速开启
-                $('.progress-bar').addClass('notransition')
-                $('.progress-bar').css('width', percent + '%');
-                $('.progress-bar').removeClass('notransition')
-                $('.progress').slideToggle('fast');
-            }
+            $('.progress-bar').removeClass("progress-bar-success");
+            $('.progress-bar').removeClass("progress-bar-danger");
+            $('.panel-footer').css('border-color', "#ddd")
         } 
+
+        if (!$('.progress').is(":visible")) {
+            // 快速开启
+            $('.progress-bar').addClass('notransition')
+            $('.progress-bar').css('width', percent + '%');
+            $('.progress-bar').removeClass('notransition')
+            $('.progress').slideToggle('fast');
+        }
 
         $('.progress-bar').css('width', percent + '%');
 
         if (percent == 100) {
-            $('.progress-bar').addClass('progress-bar-success');
+            if (has_excep) {
+                progressbar_color = "progress-bar-danger"
+                board_color = "#d9534f"
+            }
+
+            $('.progress-bar').addClass(progressbar_color);
+            $('.panel-footer').css('border-color', board_color)
             if ($('.progress').is(":visible")) {
                 // 关闭
-                $('.progress').slideToggle('normal');
+                $('.progress').slideToggle('slow');
             }
         }
     })
@@ -106,7 +124,7 @@ $(document).ready(function(){
             row += "<td><strong>" + value.project + "</strong></td>"
 
             // file
-            row += "<td>" + value.file + "</td>"
+            row += "<td style='overflow:hidden' title='" + value.file + "'>" + value.file + "</td>"
 
             // time
             row += "<td>" + value.time + "</td>"
@@ -248,7 +266,7 @@ $(document).ready(function(){
             $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%; z-index:10">\
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span\
                 aria-hidden="true">&times;</span></button>\
-        <strong>Warning!</strong> 未输入本地项目路径，这将会影响报告文件索引\
+        <strong>注意!</strong>&nbsp&nbsp未输入本地项目路径，这将会影响报告文件索引\
     </div>')
             $("#local_src_dir").parent().addClass('has-error')
         } else {
@@ -348,9 +366,13 @@ $(document).scroll(function () {
 })
 
 $(window).resize(function () {
-    $(".panel-body").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 150);
-    $(".main").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 80)
-    });
+    resetLogPanelHeight()
+})
+
+function resetLogPanelHeight() {
+    $(".panel-body").css('max-height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 150);
+    $(".main").css('height', $(window).height() - navbar_h - header_h - $(".panel-heading").height() - 80);
+}
 
 function getQueryVariable(variable, def_value)
 {

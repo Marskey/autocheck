@@ -72,24 +72,22 @@
                 </div>
             </div>
             <div id="sidepanel" class="col-xs-4 col-sm-4 col-md-4" style="right: 15px; ">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <form class="form-inline">
-                            <div style="width: 40%;">
-                                <button id="check_btn" class="btn btn-success form-control" type="button">
+                <div class="panel panel-default" >
+                    <div class="panel-heading" >
+                        <div class="input-group ">
+                            <span class="input-group-btn">
+                                <button id="check_btn" class="btn btn-success" type="button">
                                     开始检查<i class="glyphicon glyphicon-play"></i>
                                 </button>
-                            </div>
-                            <div style="width: 59%;">
-                                <input id="rev_start" type="text" class="form-control" style="width: 45%;"
-                                    placeholder="Revision Start">
-                                :
-                                <input id="rev_end" type="text" class="form-control" style="width: 45%;"
-                                    placeholder="Revision End" value="head">
-                            </div>
-                        </form>
+                            </span>
+                            <input id="rev_start" type="text" class="form-control"
+                                placeholder="Revision Start">
+                            <span class="input-group-addon" >至</span>
+                            <input id="rev_end" type="text" class="form-control"
+                                placeholder="Revision End" value="head">
+                        </div>
                     </div>
-                    <div class="panel-body">
+                    <div class="panel-body" style="overflow-y: auto;">
                         <div id="log" style="overflow-wrap: break-word;">
                         </div>
                     </div>
@@ -114,27 +112,33 @@
                 <h4 class="modal-title">Help</h4>
             </div>
             <div class="modal-body">
-                <h4>本工具为定时自动检查指定目录中代码用于找出bug和安全漏洞.</h4>
-                <pre><strong>提示 </strong>本工具利用的是第三方的检查工具例如<a href="https://www.viva64.com/en/pvs-studio/">PVS-Studio</a>, <a href="http://cppcheck.sourceforge.net/">cppcheck</a>检查结果与本人无瓜!</pre>
-                <p>上方的检查器即为第三方的检查器，选择其一来展示其检查结果。</p>
-                <p>上方的本地项目目录中请填写使用者本机的对应项目的根目录地址（.sln所存在目录）当点击<a>下载原报告文件</a>时用来替换原报告文件的代码地址方便定位（cppcheck的报告暂时无用）</p>
-                <p>左边的表格内容为当前版本号对应报告分析，表格从左到右从上到下依次为
-                    <ul>
-                        <li><strong>Rev.</strong> 为版本号</li>
-                        <li><strong>Time</strong> 检查器完成检查的时间</li>
-                        <li><strong>Result</strong> 检查的结果</li>
-                        <li><strong>Author</strong> 版本提交者</li>
-                        <li>当前版本中有安全漏洞或者存在bug的文件</li>
-                        <li>版本提交者的提交日志</li>
-                    </ul>
-                </p>
-                <pre><strong>注意 </strong> <strong>Result</strong>中的<kbd>重检 <i class="glyphicon glyphicon-repeat"></i></kbd> 按钮只会执行当前选择的检查器和检查按钮所在行的版本</pre>
-
-                <p>本工具定时9点， 12点， 15点， 18点， 21点的时候开始检查, 检查区间为上一次检查的版本到最新的版本</p>
-                <p>也可以直接点击 <kbd>开始检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来立即执行检查流程</p>
+                <h4 class="page-header">本工具为定时自动检查指定目录中代码用于找出bug和安全漏洞.</h4>
+                <pre><strong>提示 </strong>本工具利用的是第三方的检查工具例如<a href="https://www.viva64.com/en/pvs-studio/">PVS-Studio</a>检查结果与本人无瓜!</pre>
+                <p>上方导航栏中的本地项目目录中请填写使用者本机的对应项目的根目录地址（.sln所存在目录）当点击<a>下载原报告文件</a>时用来替换原报告文件的代码地址方便定位</p>
+                <p>左边的表格内容为当前版本号对应报告分析，表格从左到右从上到下依次为</p>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <img src="static/img/sample.png" class="img-responsive" alt="Responsive image">
+                    </div>
+                    <div class="col-sm-6">
+                        <dl class="dl-horizontal">
+                            <dt>File</dt>
+                            <dd>检查器查出有误的文件名</dd>
+                            <dt>Project</dt>
+                            <dd>项目名字</dd>
+                            <dt>Time</dt>
+                            <dd>检查器完成检查的时间</dd>
+                            <dt>Result</dt>
+                            <dd>检查器给出的报告</dd>
+                            <dd>该文件在检查版本范围内的提交日志</dd>
+                        </dl>
+                    </div>
+                </div>
+                <br>
+                <p>本工具定时9点， 12点， 15点， 18点， 21点的时候开始检查, 检查区间为配置文件中的起始版本到最新的版本</p>
+                <p>也可以直接点击 <kbd>开始检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来立即执行检查流程,
+                    区间为按钮旁边所填的区间范围，填Head表示到最新的一次提交</p>
                 <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>开始检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查</pre>
-                <pre><strong>注意 </strong> 当开始检查时，所有检查按钮都无法点击须等待服务端完成检查才可使用，期间可以继续浏览错误报告</pre>
-
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
