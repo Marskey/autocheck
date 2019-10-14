@@ -27,9 +27,6 @@ message_logs = []
 is_checking = False
 # 当前检查进度
 cur_progress = 100
-recheck_rev_start = 0
-recheck_rev_end = 0
-recheck_checker = ""
 dic_min_error_rev = {}
 
 def _async_raise(tid, exctype):
@@ -62,7 +59,7 @@ def stop_thread(_thread):
     _async_raise(_thread.ident, SystemExit)
 
 # 后台线程 产生数据，即刻推送至前端
-def background_thread():
+def background_thread_check():
     global checker_thread, dic_min_error_rev
     try:
         dic_min_error_rev = main.do_auto_check(dic_min_error_rev)
@@ -72,21 +69,6 @@ def background_thread():
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
-    with thread_lock:
-        checker_thread = None
-        socketio.emit('checker_state', 0)
-
-def background_thread_recheck():
-    global checker_thread, recheck_rev_start, recheck_rev_end, dic_min_error_rev
-    try:
-        dic_min_error_rev[recheck_checker] = main.do_check(recheck_rev_start, recheck_rev_end, recheck_checker)
-        file = open("./dic_min_error_rev", "w")
-        file.write(json.dumps(dic_min_error_rev))
-        file.close()
-    except Exception as ex:
-        printer.aprint(ex)
-        printer.aprint("检查意外结束")
-        progressbar.update(-100)
     with thread_lock:
         checker_thread = None
         socketio.emit('checker_state', 0)
@@ -111,19 +93,20 @@ def download(filename):
 
 @socketio.on('connect')
 def on_connect():
+    global cur_progress, dic_min_error_rev
+
     print('Client connected\n')
-    if checker_thread is not None:
-        socketio.emit('checker_state', 1)
-    else:
-        socketio.emit('checker_state', 0)
-
-    msg = main.get_checker_name_list()
-    emit('ack_checker_list', msg)
-
     for log in message_logs:
         socketio.emit('server_log', log)
-    global cur_progress
+    checker_state = 0
+    if checker_thread is not None:
+        checker_state = 1
+
+    print(dic_min_error_rev)
+    checker_list = main.get_checker_name_list()
     progressbar.update(cur_progress)
+    data = {'checker_list': checker_list, 'checker_state': checker_state, 'dic_err_revs': dic_min_error_rev}
+    emit('ack_init_data', data)
 
 @socketio.on('disconnect')
 def on_disconnect():
@@ -154,15 +137,12 @@ def req_revision_info(checker_name, offset, count):
     emit('ack_revision_info', msg)
 
 @socketio.on('start_check')
-def start_check(rev_start, rev_end, checker_name):
-    global checker_thread, recheck_rev_start, recheck_rev_end, recheck_checker
+def start_check():
+    global checker_thread
     if checker_thread is None:
-        printer.aprint('开始自检\n')
+        printer.aprint('立即检查\n')
         socketio.emit('checker_state', 1)
-        recheck_rev_start = rev_start
-        recheck_rev_end = rev_end
-        recheck_checker = checker_name
-        checker_thread = socketio.start_background_task(target=background_thread_recheck)
+        checker_thread = socketio.start_background_task(target=background_thread_check)
     else:
         printer.aprint('正在自检\n')
 
@@ -170,9 +150,9 @@ def auto_check():
     with thread_lock:
         global checker_thread
         if checker_thread is None:
-            printer.aprint('开始自检\n')
+            printer.aprint('立即检查\n')
             socketio.emit('checker_state', 1)
-            checker_thread = socketio.start_background_task(target=background_thread)
+            checker_thread = socketio.start_background_task(target=background_thread_check)
         else:
             printer.aprint('正在自检\n')
 
@@ -185,11 +165,14 @@ if __name__ == '__main__':
     if os.path.exists("./dic_min_error_rev"): 
         file = open("./dic_min_error_rev", "r")
         file_content = file.read()
-        printer.aprint("自检开始版本号: " + file_content)
         if file_content != "":
             dic_min_error_rev= json.loads(file_content)
         file.close()
 
+    for key, value in dic_min_error_rev.items():
+        if value == 0:
+            dic_min_error_rev[key] = config.get_check_revision_start()
+    
     job = scheduler.get_job("auto_check")
     if job is not None:
         scheduler.remove_job("auto_check")

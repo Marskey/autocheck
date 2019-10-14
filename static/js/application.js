@@ -11,7 +11,6 @@ $(document).ready(function(){
     var one_page_count = 10;
     var server_time_offset = 0;
     var sel_page = 0;
-    var data_inited = false;
     navbar_h = $(".navbar").height();
     header_h = $(".page-header").outerHeight();
 
@@ -51,15 +50,8 @@ $(document).ready(function(){
     socket.on('checker_state', function(state) {
         if (state == 1) {
             $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
-            $('#rev_start').attr('disabled', true)
-            $('#rev_end').attr('disabled', true)
         } else {
-            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('开始检查<i class="glyphicon glyphicon-play"></i>')
-            $('#rev_start').attr('disabled', false)
-            $('#rev_end').attr('disabled', false)
-            if (data_inited) {
-                req_revision_info()
-            }
+            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('立即检查<i class="glyphicon glyphicon-play"></i>')
         }
     })
 
@@ -111,7 +103,6 @@ $(document).ready(function(){
             $('#table_container').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
             var offset = getQueryVariable("offset", 0);
             socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
-            data_inited = false;
         }
     }
 
@@ -145,7 +136,7 @@ $(document).ready(function(){
                     log_json = JSON.parse(pre_log)
                     row += "<tr class='warning'>"
                     row += "<td style='width:15%'>" + log_json.rev + "</td>"
-                    row += "<td>" + log_json.author + "</td>"
+                    row += "<td style='width:10%'>" + log_json.author + "</td>"
                     row += "<td>" + log_json.msg + "</td>"
                     row += "</tr>"
                 })
@@ -154,8 +145,6 @@ $(document).ready(function(){
 
             $('#table_container').append(row);
         })
-
-        data_inited = true;
     })
 
     socket.on('ack_report_total', function (data) {
@@ -169,7 +158,7 @@ $(document).ready(function(){
         if (socket != null) {
             if ($(this).hasClass("btn-success")) {
                 checker_name = $("#checker_selector").val()
-                socket.emit('start_check', $('#rev_start').val(), $('#rev_end').val(), checker_name)
+                socket.emit('start_check')
             } else {
                 socket.emit('stop_check')
             }
@@ -221,9 +210,9 @@ $(document).ready(function(){
         $("#left_time").html(htmlstr);
     }
 
-    socket.on('ack_checker_list', (msg) => {
+    socket.on('ack_init_data', (data) => {
         var contain = ""
-        msg.forEach(function(value) {
+        data.checker_list.forEach(function(value) {
             contain += "<option>"
             contain += value
             contain += "</option>"
@@ -236,6 +225,14 @@ $(document).ready(function(){
             $("#checker_selector").selectpicker('val', co_checker_name)
         } 
 
+        if (data.checker_state == 1) {
+            $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
+        } else {
+            $("#check_btn").removeClass("btn-danger").addClass("btn-success").html('立即检查<i class="glyphicon glyphicon-play"></i>')
+        }
+
+        $('#rev_start').val("从版本 r" + data.dic_err_revs[co_checker_name] + " 开始检查")
+
         req_revision_info()
     })
 
@@ -243,14 +240,6 @@ $(document).ready(function(){
         req_revision_info()
         checker_name = $(this).val()
         setCookie('checker', checker_name)
-    })
-
-    $('#rev_start').on('change', function() {
-        setCookie('rev_start', $(this).val())
-    })
-
-    $('#rev_end').on('change', function() {
-        setCookie('rev_end', $(this).val())
     })
 
     $("#local_src_dir").on('change', (e) => {
@@ -262,8 +251,6 @@ $(document).ready(function(){
     $("#local_src_dir").val(local_dir)
     $("#local_src_dir").attr('title', local_dir)
     checkHasLocalDir()
-    $("#rev_start").val(getCookie('rev_start'))
-    $("#rev_end").val(getCookie('rev_end'))
 
     function checkHasLocalDir() {
         if ($("#local_src_dir").val() == "") {

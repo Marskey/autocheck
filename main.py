@@ -19,19 +19,8 @@ checker_mgr = CheckerMgr()
 def do_auto_check(dic_min_rev):
     dic_min_rev_error = {}
     rev_start = config.get_check_revision_start()
+    rev_end   = 'head'
     check_names = get_checker_name_list()
-    for check_name in check_names:
-        if len(dic_min_rev) != 0:
-            rev_start = dic_min_rev[check_name]
-            min_rev_error = do_check(rev_start, 'head', '')
-            dic_min_rev_error[checker.get_name()] = min_rev_error
-    printer.aprint('全部检查完毕.')
-    return dic_min_rev_error
-
-def do_check(rev_start, rev_end, checker_name) -> int:
-    global source_controller, checker_mgr
-    if checker_name == "":
-        return 0
 
     progressbar.set_total(1)
     # 更新代码
@@ -39,6 +28,19 @@ def do_check(rev_start, rev_end, checker_name) -> int:
     rev_end = source_controller.updateTo(rev_end)
     progressbar.add(1)
     printer.aprint('已更新代码至r{0}'.format(rev_end))
+
+    for check_name in check_names:
+        if check_name in dic_min_rev:
+            rev_start = dic_min_rev[check_name]
+            min_rev_error = do_check(rev_start, rev_end, check_name)
+            dic_min_rev_error[check_name] = min_rev_error
+    printer.aprint('全部检查完毕.')
+    return dic_min_rev_error
+
+def do_check(rev_start, rev_end, checker_name) -> int:
+    global source_controller, checker_mgr
+    if checker_name == "":
+        return 0
 
     progressbar.set_total(1)
     # 获取版本变化文件集合

@@ -77,14 +77,10 @@
                         <div class="input-group ">
                             <span class="input-group-btn">
                                 <button id="check_btn" class="btn btn-success" type="button">
-                                    开始检查<i class="glyphicon glyphicon-play"></i>
+                                    立即检查<i class="glyphicon glyphicon-play"></i>
                                 </button>
                             </span>
-                            <input id="rev_start" type="text" class="form-control"
-                                placeholder="Revision Start">
-                            <span class="input-group-addon" >至</span>
-                            <input id="rev_end" type="text" class="form-control"
-                                placeholder="Revision End" value="head">
+                            <input id="rev_start" type="text" class="form-control" readonly>
                         </div>
                     </div>
                     <div class="panel-body" style="overflow-y: auto;">
@@ -135,10 +131,10 @@
                     </div>
                 </div>
                 <br>
-                <p>本工具定时9点， 12点， 15点， 18点， 21点的时候开始检查, 检查区间为配置文件中的起始版本到最新的版本</p>
-                <p>也可以直接点击 <kbd>开始检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来立即执行检查流程,
-                    区间为按钮旁边所填的区间范围，填Head表示到最新的一次提交</p>
-                <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>开始检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查</pre>
+                <p>本工具定时9点， 12点， 15点， 18点， 21点的时候立即检查, 检查区间为上次检查没有错误的最小版本到最新的版本</p>
+                <pre><strong>提示 </strong>初次使用该工具可以在config.py中配置第一次检查的起始版本号</pre>
+                <p>直接点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来执行检查流程</p>
+                <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查</pre>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
