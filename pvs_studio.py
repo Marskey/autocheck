@@ -31,14 +31,13 @@ class PVSStudioChecker(IChecker):
     def get_result(self, offset, count)->list:
         rev_list = []
         db = EasySqlite('rfp.db')
-        for row in db.execute("SELECT rowid, * FROM " + self.CONST_TABLE_NAME + " WHERE report_path <> '' LIMIT {0}, {1}".format(offset, count), [], False, False):
-            rowid = row[0]
-            project = row[1]
-            file_name = row[2]
-            file_path = row[3]
-            time = row[4]
-            report_path = row[5]
-            log = row[6]
+        for row in db.execute("SELECT * FROM " + self.CONST_TABLE_NAME + " WHERE report_path <> '' LIMIT {0}, {1}".format(offset, count), [], False, False):
+            project = row[0]
+            file_name = row[1]
+            file_path = row[2]
+            time = row[3]
+            report_path = row[4]
+            log = row[5]
 
             html_file_path = ""
             if not report_path == "":
@@ -52,8 +51,7 @@ class PVSStudioChecker(IChecker):
                     self.__convert_to_html(report_path)
 
             rev_list.append({
-                  "rowid": rowid
-                , "project": project
+                  "project": project
                 , "file": file_name
                 , "time": time
                 , "html_path" : html_file_path
@@ -65,7 +63,7 @@ class PVSStudioChecker(IChecker):
 
     def get_result_total_cnt(self)->int:
         db = EasySqlite('rfp.db')
-        return db.execute("select max(rowid) from " + self.CONST_TABLE_NAME, [], False, False)
+        return db.execute("select count(rowid) from " + self.CONST_TABLE_NAME, [], False, False)
 
     # 转换plog成html格式
     def __convert_to_html(self, plog_path)->bool:
@@ -120,6 +118,9 @@ class PVSStudioChecker(IChecker):
                 output_file_path = "{0}\\file{1}.plog".format(
                     config.get_dir_pvs_plogs()
                     , filename)
+
+                if os.path.exists(output_file_path):
+                    os.remove(output_file_path)
 
                 ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --platform "win32" --configuration "Release" -f "{2}"'.format(config.get_dir_sln()
                     , output_file_path
@@ -178,9 +179,6 @@ class PVSStudioChecker(IChecker):
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
                                + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, json.dumps(log_json)), False, True)
-
-                    if os.path.exists(output_file_path):
-                        os.remove(output_file_path)
 
                 # 更新进度条用
                 progressbar.add(1)

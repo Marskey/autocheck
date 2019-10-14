@@ -64,8 +64,6 @@ $(document).ready(function(){
     })
 
     socket.on('checking_progress', function(percent) {
-        var progressbar_color = "progress-bar-success"
-        var board_color = "#ddd"
         var has_excep = false
 
         if (percent < 0) {
@@ -90,6 +88,9 @@ $(document).ready(function(){
         $('.progress-bar').css('width', percent + '%');
 
         if (percent == 100) {
+            var progressbar_color = "progress-bar-success"
+            var board_color = "#5cb85c"
+
             if (has_excep) {
                 progressbar_color = "progress-bar-danger"
                 board_color = "#d9534f"
@@ -108,7 +109,7 @@ $(document).ready(function(){
     function req_revision_info() {
         if (socket != null) {
             $('#table_container').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
-            offset = getQueryVariable("offset", 0);
+            var offset = getQueryVariable("offset", 0);
             socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
             data_inited = false;
         }
@@ -154,11 +155,14 @@ $(document).ready(function(){
             $('#table_container').append(row);
         })
 
-        server_time = parseInt(msg.cur_time);
+        data_inited = true;
+    })
+
+    socket.on('ack_report_total', function (data) {
+        changePagination(data.offset, data.total);
+        var server_time = parseInt(data.time)
         server_time_offset = server_time - parseInt(new Date().getTime() / 1000)
         show_left_time();
-        changePagination(msg.offset, msg.total);
-        data_inited = true;
     })
 
     $("#check_btn").on('click', function () {
@@ -263,7 +267,7 @@ $(document).ready(function(){
 
     function checkHasLocalDir() {
         if ($("#local_src_dir").val() == "") {
-            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:50%; z-index:10">\
+            $('body').prepend('<div class="alert alert-warning alert-dismissible " style="position: fixed; margin-top: 60px; left:70%; z-index:10">\
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span\
                 aria-hidden="true">&times;</span></button>\
         <strong>注意!</strong>&nbsp&nbsp未输入本地项目路径，这将会影响报告文件索引\
@@ -284,7 +288,7 @@ $(document).ready(function(){
             total_page = 1
         }
 
-        var first_page = '<li><a href="?offset=(0)" >&laquo;</a>\
+        var first_page = '<li><a href="?offset=0" >&laquo;</a>\
                           </li>';
         if (cur_page == 1) {
             first_page = '<li class = "disabled"><a>&laquo;</a>\

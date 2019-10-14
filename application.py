@@ -140,8 +140,9 @@ def req_revision_info(checker_name, offset, count):
         count = 20
 
     total = main.get_report_total_cnt(checker_name)
+    emit('ack_report_total', {'offset': offset, 'total': total, 'time': time.time()})
     rev_list = main.get_revisions_list(checker_name, offset, count)
-    msg = {"offset": offset, "total": total, "data": rev_list, "cur_time": time.time()}
+    msg = {"offset": offset, "data": rev_list}
     emit('ack_revision_info', msg)
 
 @socketio.on('start_check')
