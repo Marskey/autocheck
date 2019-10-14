@@ -13,6 +13,7 @@ import progressbar
 import time
 import os
 import re
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -29,6 +30,7 @@ cur_progress = 100
 recheck_rev_start = 0
 recheck_rev_end = 0
 recheck_checker = ""
+dic_min_error_rev = {}
 
 def _async_raise(tid, exctype):
     """raises the exception, performs cleanup if needed"""
@@ -61,9 +63,12 @@ def stop_thread(_thread):
 
 # 后台线程 产生数据，即刻推送至前端
 def background_thread():
-    global checker_thread
+    global checker_thread, dic_min_error_rev
     try:
-        main.do_check(config.get_check_revision_start(), 'head', "")
+        dic_min_error_rev = main.do_auto_check(dic_min_error_rev)
+        file = open("./dic_min_error_rev", "w")
+        file.write(json.dumps(dic_min_error_rev))
+        file.close()
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
@@ -72,9 +77,12 @@ def background_thread():
         socketio.emit('checker_state', 0)
 
 def background_thread_recheck():
-    global checker_thread, recheck_rev_start, recheck_rev_end
+    global checker_thread, recheck_rev_start, recheck_rev_end, dic_min_error_rev
     try:
-        main.do_check(recheck_rev_start, recheck_rev_end, recheck_checker)
+        dic_min_error_rev[recheck_checker] = main.do_check(recheck_rev_start, recheck_rev_end, recheck_checker)
+        file = open("./dic_min_error_rev", "w")
+        file.write(json.dumps(dic_min_error_rev))
+        file.close()
     except Exception as ex:
         printer.aprint(ex)
         printer.aprint("检查意外结束")
@@ -172,6 +180,15 @@ if __name__ == '__main__':
     printer.set_handler(print_handler)
     progressbar.set_handler(progressbar_handler)
     scheduler = BackgroundScheduler()
+
+    # 读取上之前检查的没有错误的最小版本号
+    if os.path.exists("./dic_min_error_rev"): 
+        file = open("./dic_min_error_rev", "r")
+        file_content = file.read()
+        printer.aprint("自检开始版本号: " + file_content)
+        if file_content != "":
+            dic_min_error_rev= json.loads(file_content)
+        file.close()
 
     job = scheduler.get_job("auto_check")
     if job is not None:

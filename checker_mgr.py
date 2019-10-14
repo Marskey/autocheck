@@ -12,12 +12,6 @@ class CheckerMgr:
         self.__register_checker(PVSStudioChecker())
         # self.__register_checker(CppChecker())
 
-    def check(self, changed_files):
-        global checkers
-        for name, checker in checkers.items():
-            checker.check(changed_files)
-            printer.aprint('{0}检查结束...'.format(checker.get_name()))
-    
     def get_checker(self, name)->IChecker:
         if name in checkers:
             return checkers[name]

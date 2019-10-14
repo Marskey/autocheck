@@ -16,8 +16,22 @@ source_controller = src_controller_factory.getSrcController(
 
 checker_mgr = CheckerMgr()
 
-def do_check(rev_start, rev_end, checker_name):
+def do_auto_check(dic_min_rev):
+    dic_min_rev_error = {}
+    rev_start = config.get_check_revision_start()
+    check_names = get_checker_name_list()
+    for check_name in check_names:
+        if len(dic_min_rev) != 0:
+            rev_start = dic_min_rev[check_name]
+            min_rev_error = do_check(rev_start, 'head', '')
+            dic_min_rev_error[checker.get_name()] = min_rev_error
+    printer.aprint('全部检查完毕.')
+    return dic_min_rev_error
+
+def do_check(rev_start, rev_end, checker_name) -> int:
     global source_controller, checker_mgr
+    if checker_name == "":
+        return 0
 
     progressbar.set_total(1)
     # 更新代码
@@ -37,13 +51,12 @@ def do_check(rev_start, rev_end, checker_name):
     progressbar.set_total(len(changed_files) * 2 * len(checker_mgr.get_checker_name_list()))
     # 检查代码
     printer.aprint('检查r{0}至r{1}代码中...'.format(rev_start, rev_end))
-    if checker_name == "":
-        checker_mgr.check(changed_files)
-    else:
-        checker = checker_mgr.get_checker(checker_name)
-        checker.check(changed_files)
 
-    printer.aprint('全部检查完毕.')
+    checker = checker_mgr.get_checker(checker_name)
+    min_error_rev = checker.check(changed_files)
+
+    printer.aprint('{0}检查结束...'.format(checker.get_name()))
+    return min_error_rev
 
 def get_revisions_list(checker_name, offset, count):
     if checker_mgr.get_checker(checker_name) is None:

@@ -36,7 +36,7 @@ class TinySvn(TinySrcController):
                     if len(local_fpath) != 0:
                         ext = os.path.splitext(local_fpath)[-1]
                         if ext == ".h" or ext == ".cpp" or ext == ".hpp":
-                            if not local_fpath in res:
+                            if local_fpath not in res:
                                 res[local_fpath] = []
                             res[local_fpath].append({"rev": revision, "author":author, "msg":msg})
         return res

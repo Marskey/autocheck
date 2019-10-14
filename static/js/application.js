@@ -209,7 +209,7 @@ $(document).ready(function(){
         left_sec %= 3600;
         var min = parseInt(left_sec / 60);
         if (min != 0) {
-            htmlstr += min + "分钟 ";
+            htmlstr += min + "分 ";
         }
 
         left_sec %= 60;

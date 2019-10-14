@@ -21,12 +21,13 @@ class PVSStudioChecker(IChecker):
     def get_name(self)->str:
         return "PVS-Studio"
 
-    def check(self, changed_files)->None:
+    def check(self, changed_files)->int:
         # 生成要检查源码文件集合的xml文件
         self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
         printer.aprint(self.get_name() + '生成plog...')
-        self.__gen_plog()
+        # 返回有错误的最小版本号
+        return self.__gen_plog()
 
     def get_result(self, offset, count)->list:
         rev_list = []
@@ -108,7 +109,8 @@ class PVSStudioChecker(IChecker):
             progressbar.add(1)
 
     def __gen_plog(self):
-        res = []
+        # 最早一个拥有错误的版本，用来以后检查的起始点
+        min_rev_has_error = 9999999
         os.system("if not exist {0} mkdir {0}".format(config.get_dir_pvs_plogs()))
         db = EasySqlite('rfp.db')
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
@@ -153,12 +155,17 @@ class PVSStudioChecker(IChecker):
                 if ret == 0:
                     has_error = False
 
+                cur_file_min_rev = 9999999
                 logs_json = []
                 xmlRoot = etree.parse(file_path)
                 logsRoot = xmlRoot.find('logs')
                 for log in logsRoot.iter('log'):
                     log_json = {"rev": log.attrib["rev"], "author": log.attrib["author"], "msg": log.attrib["msg"]}
                     logs_json.append(log_json)
+                    revision = int(log.attrib["rev"])
+                    if cur_file_min_rev > revision:
+                        cur_file_min_rev = revision
+
                 pathEle = xmlRoot.find('./SourceFiles/Path')
                 src_path = pathEle.text
 
@@ -179,13 +186,14 @@ class PVSStudioChecker(IChecker):
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
                                + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, json.dumps(log_json)), False, True)
+                    if min_rev_has_error > cur_file_min_rev:
+                        min_rev_has_error = cur_file_min_rev
 
                 # 更新进度条用
                 progressbar.add(1)
                 printer.aprint(self.get_name() + '完成文件{0}检查'.format(src_path))
 
-
-        return res
+        return min_rev_has_error
 
     # 为了解决代码源文件是gbk格式，导致显示乱码的问题
     def __convert_gbk_to_utf8(self, file, dir):

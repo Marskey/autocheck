@@ -10,7 +10,7 @@ class IChecker:
         pass
 
     @abstractmethod
-    def check(self, changed_files)->None:
+    def check(self, changed_files)->int:
         pass
 
     @abstractmethod
