@@ -14,3 +14,4 @@ static/reports
 check_results
 stderr.log
 /.vscode
+/dic_min_error_rev
