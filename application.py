@@ -156,11 +156,8 @@ def auto_check():
         else:
             printer.aprint('正在自检\n')
 
-if __name__ == '__main__':
-    printer.set_handler(print_handler)
-    progressbar.set_handler(progressbar_handler)
-    scheduler = BackgroundScheduler()
-
+def load_min_err_rev_dic():
+    global dic_min_error_rev
     # 读取上之前检查的没有错误的最小版本号
     if os.path.exists("./dic_min_error_rev"): 
         file = open("./dic_min_error_rev", "r")
@@ -168,19 +165,22 @@ if __name__ == '__main__':
         if file_content != "":
             dic_min_error_rev= json.loads(file_content)
         file.close()
-    else:
-        if len(dic_min_error_rev) == 0:
-            checker_list = main.get_checker_name_list()
-            for checker_name in checker_list:
-                dic_min_error_rev[checker_name] = 0
+
+    if len(dic_min_error_rev) == 0:
+        checker_list = main.get_checker_name_list()
+        for checker_name in checker_list:
+            dic_min_error_rev[checker_name] = 0
 
     for key, value in dic_min_error_rev.items():
         if value == 0:
             dic_min_error_rev[key] = config.get_check_revision_start()
 
-    for key, value in dic_min_error_rev.items():
-        if value == 0:
-            dic_min_error_rev[key] = config.get_check_revision_start()
+if __name__ == '__main__':
+    printer.set_handler(print_handler)
+    progressbar.set_handler(progressbar_handler)
+    scheduler = BackgroundScheduler()
+
+    load_min_err_rev_dic()
     
     job = scheduler.get_job("auto_check")
     if job is not None:
