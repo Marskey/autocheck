@@ -122,7 +122,7 @@ $(document).ready(function(){
             value = msg.data[key];
             var row = "<tr>"
             // project
-            row += "<td><strong>" + value.project + "</strong></td>"
+            row += "<td style='overflow:hidden' title='" + value.project + "'>" + value.project + "</td>"
 
             // file
             row += "<td style='overflow:hidden' title='" + value.file + "'>" + value.file + "</td>"
