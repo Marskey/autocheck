@@ -178,6 +178,10 @@ if __name__ == '__main__':
         if value == 0:
             dic_min_error_rev[key] = config.get_check_revision_start()
 
+    for key, value in dic_min_error_rev.items():
+        if value == 0:
+            dic_min_error_rev[key] = config.get_check_revision_start()
+    
     job = scheduler.get_job("auto_check")
     if job is not None:
         scheduler.remove_job("auto_check")
