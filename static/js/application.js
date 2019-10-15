@@ -268,21 +268,16 @@ $(document).ready(function(){
 
     // 分页显示逻辑处理
     function changePagination(offset, total) {
-        var visual_count = 9;
+        var visual_count = 6;
         var cur_page = parseInt(offset / one_page_count) + 1;
         var total_page = parseInt((total - 1) / one_page_count) + 1;
-
-        var first_page = '<li><a href="?offset=0">&laquo;</a></li>';
-        if (cur_page == 1) {
-            first_page = '<li class="disabled"><a>&laquo;</a></li>';
-        }
 
         var pre_page = '';
         var pre_page_num = (cur_page - 1);
         if (pre_page_num <= 0) {
-            pre_page = '<li class = "disabled"><a><</a></li>';
+            pre_page = '<li class = "disabled"><a>< Prev</a></li>';
         } else {
-            pre_page = '<li><a href="?offset=' + (pre_page_num - 1) * one_page_count + '"><</a></li>';
+            pre_page = '<li><a href="?offset=' + (pre_page_num - 1) * one_page_count + '">< Prev</a></li>';
         }
 
         var min_num = 1;
@@ -302,8 +297,19 @@ $(document).ready(function(){
             }
         }
 
-        var contain = '';
+        var first_page = ''
+        if (min_num != 1) {
+            first_page = '<li><a href="?offset=0">1</a></li><li><a>...</a></li>';
+        }
 
+        var last_page = ''
+        if (max_num != total_page) {
+            last_page = '<li><a>...</a></li><li><a href="?offset=' + (total_page - 1) * one_page_count + '">';
+            last_page += total_page
+            last_page += '</a></li>';
+        }
+
+        var contain = '';
         for (i = min_num; i <= max_num; ++i) {
             if (i - min_num > visual_count) {
                 break;
@@ -323,22 +329,12 @@ $(document).ready(function(){
         } else {
             next_page = '<li><a href="?offset=' + (next_page_num - 1) * one_page_count + '">';
         }
-        next_page += '></a>\
+        next_page += 'Next ></a>\
                       </li>';
-
-        var last_page = '<li><a href="?offset=' + (total_page - 1) * one_page_count + '">';
-        if (cur_page == total_page) {
-            last_page = '<li class = "disabled"><a>';
-        }
-
-        last_page += '&raquo;</a>\
-                      </li>';
-
 
         sel_page = cur_page;
-        $('#pagination').html(first_page + pre_page + contain + next_page + last_page)
+        $('#pagination').html(pre_page + first_page + contain + last_page + next_page)
     }
-
 });
 
 $(document).scroll(function () {
