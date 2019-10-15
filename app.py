@@ -17,6 +17,7 @@ import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+app.debug = True
 
 # turn the flask app into a socketio app
 socketio = SocketIO(app)
