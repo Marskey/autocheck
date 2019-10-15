@@ -68,8 +68,8 @@ def background_thread_check():
         file.write(json.dumps(dic_min_error_rev))
         file.close()
     except Exception as ex:
-        printer.aprint(ex)
-        printer.aprint("检查意外结束")
+        printer.errprint(ex)
+        printer.errprint("检查意外结束")
     with thread_lock:
         checker_thread = None
         socketio.emit('checker_state', 0)
@@ -117,13 +117,13 @@ def on_disconnect():
 def on_stop_check():
     global checker_thread
     if checker_thread is not None:
-        printer.aprint('客户停止了自检\n')
+        printer.errprint('客户停止了自检\n')
         stop_thread(checker_thread)
         checker_thread = None
         socketio.emit('checker_state', 0)
         progressbar.update(-100)
     else:
-        printer.aprint('后台并没有正在自检\n')
+        printer.errprint('后台并没有正在自检\n')
 
 @socketio.on('req_revision_info')
 def req_revision_info(checker_name, offset, count):
@@ -189,4 +189,8 @@ if __name__ == '__main__':
     # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
     job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
+
+    if len(message_logs) == 0:
+        message_logs.append('<p class="text-primary">Written by <strong>Marskey</strong></p>')
+
     socketio.run(app, debug=True, host="0.0.0.0", port=5001)

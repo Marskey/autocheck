@@ -16,4 +16,13 @@ def aprint(*msg):
             ret_str = ''
             for item in msg:
                 ret_str += str(item)
-            _handler(str_time + ret_str)
+            _handler("<strong>{0}</strong><span>{1}</span>".format(str_time, ret_str))
+
+def errprint(*msg):
+    with _ap_lock:
+        str_time = time.strftime('%Y-%m-%d %H:%M:%S ', time.localtime(time.time()))
+        if _handler is not None:
+            ret_str = ''
+            for item in msg:
+                ret_str += str(item)
+            _handler("<strong>{0}</strong><span class='err-log'>{1}</span>".format(str_time, ret_str))
