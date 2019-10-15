@@ -270,36 +270,36 @@ $(document).ready(function(){
     function changePagination(offset, total) {
         var visual_count = 9;
         var cur_page = parseInt(offset / one_page_count) + 1;
-        var total_page = parseInt(total / one_page_count + 0.5);
-        if (total_page == 0) {
-            total_page = 1
-        }
+        var total_page = parseInt((total - 1) / one_page_count) + 1;
 
-        var first_page = '<li><a href="?offset=0" >&laquo;</a>\
-                          </li>';
+        var first_page = '<li><a href="?offset=0">&laquo;</a></li>';
         if (cur_page == 1) {
-            first_page = '<li class = "disabled"><a>&laquo;</a>\
-                          </li>';
-        }
-
-        var min_num = cur_page - parseInt(visual_count / 2);
-        if (min_num <= 0) {
-            min_num = 1;
-        }
-
-        var max_num = cur_page + parseInt(visual_count / 2)
-        if (max_num > total_page) {
-            max_num = total_page;
+            first_page = '<li class="disabled"><a>&laquo;</a></li>';
         }
 
         var pre_page = '';
         var pre_page_num = (cur_page - 1);
         if (pre_page_num <= 0) {
-            pre_page = '<li class = "disabled"><a><</a>\
-                       </li>';
+            pre_page = '<li class = "disabled"><a><</a></li>';
         } else {
-            pre_page = '<li><a href="?offset=' + (pre_page_num - 1) * one_page_count + '"><</a>\
-                       </li>';
+            pre_page = '<li><a href="?offset=' + (pre_page_num - 1) * one_page_count + '"><</a></li>';
+        }
+
+        var min_num = 1;
+        var max_num = total_page;
+
+        if (total_page > visual_count) {
+            var min_num = cur_page - parseInt(visual_count / 2);
+            var max_num = cur_page + parseInt(visual_count / 2);
+            if (min_num <= 0) {
+                var dif_val = 1 - min_num;
+                min_num += dif_val;
+                max_num += dif_val;
+            } else if (max_num >= total_page) {
+                var dif_val = max_num - total_page;
+                max_num -= dif_val;
+                min_num -= dif_val;
+            }
         }
 
         var contain = '';
