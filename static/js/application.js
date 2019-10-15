@@ -113,10 +113,10 @@ $(document).ready(function(){
             value = msg.data[key];
             var row = "<tr>"
             // project
-            row += "<td style='overflow:hidden' title='" + value.project + "'>" + value.project + "</td>"
+            row += "<td style='overflow-wrap: break-word;' title='" + value.project + "'>" + value.project + "</td>"
 
             // file
-            row += "<td style='overflow:hidden' title='" + value.file + "'>" + value.file + "</td>"
+            row += "<td style='overflow-wrap: break-word;' title='" + value.file + "'>" + value.file + "</td>"
 
             // time
             row += "<td>" + value.time + "</td>"
@@ -124,7 +124,7 @@ $(document).ready(function(){
             // result
             row += "<td>"
             row += "<a target='_blank' href='" + value.html_path + "'>网页报告</a>"
-            row += ", "
+            row += "<br> "
             row += "<a href='" + value.report_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
             row += "</td>"
 
@@ -135,8 +135,8 @@ $(document).ready(function(){
                 value.log.forEach(function (pre_log) {
                     log_json = JSON.parse(pre_log)
                     row += "<tr class='warning'>"
-                    row += "<td style='width:15%'>" + log_json.rev + "</td>"
-                    row += "<td style='width:10%'>" + log_json.author + "</td>"
+                    row += "<td style='width:87px'>" + log_json.rev + "</td>"
+                    row += "<td style='width:87px'>" + log_json.author + "</td>"
                     row += "<td>" + log_json.msg + "</td>"
                     row += "</tr>"
                 })
