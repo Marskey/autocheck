@@ -188,6 +188,9 @@ class PVSStudioChecker(IChecker):
                                + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, json.dumps(log_json)), False, True)
                     if min_rev_has_error > cur_file_min_rev:
                         min_rev_has_error = cur_file_min_rev
+                    
+                    printer.aprint(self.get_name() + '生成 {0} 的网页报告...'.format(src_path))
+                    self.__convert_to_html(output_file_path)
 
                 # 更新进度条用
                 progressbar.add(1)
