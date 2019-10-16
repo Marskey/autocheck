@@ -14,9 +14,9 @@ class IChecker:
         pass
 
     @abstractmethod
-    def get_result(self, offset, count)->list:
+    def get_result(self, offset, count, search)->list:
         pass
 
     @abstractmethod
-    def get_result_total_cnt(self)->int:
+    def get_result_total_cnt(self, search)->int:
         pass

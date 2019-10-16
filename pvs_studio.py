@@ -17,6 +17,7 @@ class PVSStudioChecker(IChecker):
         db = EasySqlite('rfp.db')
         db.execute("create table if not exists " + self.CONST_TABLE_NAME +
                    "(project text NOT NULL, file text, file_path text, time timestamp default current_timestamp not null, report_path text, log text); ")
+        db.execute("CREATE VIRTUAL TABLE if not exists " + self.CONST_TABLE_NAME + "_fts USING fts4(file_path, body);")
     
     def get_name(self)->str:
         return "PVS-Studio"
@@ -29,10 +30,19 @@ class PVSStudioChecker(IChecker):
         # 返回有错误的最小版本号
         return self.__gen_plog()
 
-    def get_result(self, offset, count)->list:
+    def get_result(self, offset, count, search)->list:
         rev_list = []
         db = EasySqlite('rfp.db')
-        for row in db.execute("SELECT * FROM " + self.CONST_TABLE_NAME + " WHERE report_path <> '' LIMIT {0}, {1}".format(offset, count), [], False, False):
+
+        sql = "SELECT * FROM " + self.CONST_TABLE_NAME + " LIMIT ?, ?"
+        if search != "":
+            db_res = db.execute("select file_path from "
+                                  + self.CONST_TABLE_NAME
+                                  + "_fts where body match ?", ["*" + search + "*"], True, False)
+            condition = '\'' + '\',\''.join(str(fp['file_path']) for fp in db_res) + '\''
+            sql = "SELECT * FROM " + self.CONST_TABLE_NAME + " WHERE file_path in ({0}) LIMIT ?, ?".format(condition)
+
+        for row in db.execute(sql, (offset, count), False, False):
             project = row[0]
             file_name = row[1]
             file_path = row[2]
@@ -62,8 +72,16 @@ class PVSStudioChecker(IChecker):
 
         return rev_list
 
-    def get_result_total_cnt(self)->int:
+    def get_result_total_cnt(self, search)->int:
         db = EasySqlite('rfp.db')
+        if search != "":
+            return db.execute("select count(file_path) from "
+                              + self.CONST_TABLE_NAME
+                              + "_fts where body match ?"
+                              , ["*" + search + "*"]
+                              , False
+                              , False)
+
         return db.execute("select count(rowid) from " + self.CONST_TABLE_NAME, [], False, False)
 
     # 转换plog成html格式
@@ -177,17 +195,32 @@ class PVSStudioChecker(IChecker):
                            , True
                     )
 
+                db.execute("delete from " + self.CONST_TABLE_NAME + "_fts where file_path = ?"
+                           , [src_path]
+                           , False
+                           , True
+                           )
+
                 if has_error:
                     plogXmlRoot = etree.parse(output_file_path)
                     analysisLog = plogXmlRoot.find('PVS-Studio_Analysis_Log')
                     project = analysisLog.find('Project').text
                     filename = analysisLog.find('ShortFile').text
 
+                    log_str = json.dumps(log_json)
+
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
-                               + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, json.dumps(log_json)), False, True)
+                               + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, log_str), False, True)
                     if min_rev_has_error > cur_file_min_rev:
                         min_rev_has_error = cur_file_min_rev
+
+                    db.execute("insert into "
+                               + self.CONST_TABLE_NAME
+                               + "_fts values (?, ?);"
+                               , (src_path, '{0} {1} {2}'.format(project, filename, log_str))
+                               , False
+                               , True)
                     
                     printer.aprint(self.get_name() + '生成 {0} 的网页报告...'.format(src_path))
                     self.__convert_to_html(output_file_path)

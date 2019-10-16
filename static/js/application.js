@@ -4,7 +4,6 @@ var header_h = 0;
 $(document).ready(function(){
     //connect to the socket server.
     var server = 'http://' + document.domain + ':' + location.port;
-    console.log("server url:" + server);
     socket = io(server);
     var log_received = [];
     // 每页的数据数量
@@ -102,7 +101,7 @@ $(document).ready(function(){
         if (socket != null) {
             $('#table_container').html('<tr><td colspan="4"><p>Loading...</p></td></tr>');
             var offset = getQueryVariable("offset", 0);
-            socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count));
+            socket.emit('req_revision_info', $("#checker_selector").val(), parseInt(offset), parseInt(one_page_count), $('#search_input').val());
         }
     }
 
@@ -223,7 +222,9 @@ $(document).ready(function(){
         co_checker_name = getCookie('checker')
         if (co_checker_name != null) {
             $("#checker_selector").selectpicker('val', co_checker_name)
-        } 
+        } else {
+            co_checker_name = $("#checker_selector").val()
+        }
 
         if (data.checker_state == 1) {
             $("#check_btn").removeClass("btn-success").addClass("btn-danger").html('停止检查<i class="glyphicon glyphicon-stop"></i>')
@@ -335,6 +336,12 @@ $(document).ready(function(){
         sel_page = cur_page;
         $('#pagination').html(pre_page + first_page + contain + last_page + next_page)
     }
+
+    $('#search_input').on("keyup", function (e) {
+        if (e.keyCode == 13) {
+            req_revision_info()
+        }
+    });
 });
 
 $(document).scroll(function () {

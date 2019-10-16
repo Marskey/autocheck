@@ -103,7 +103,6 @@ def on_connect():
     if checker_thread is not None:
         checker_state = 1
 
-    print(dic_min_error_rev)
     checker_list = main.get_checker_name_list()
     progressbar.update(cur_progress)
     data = {'checker_list': checker_list, 'checker_state': checker_state, 'dic_err_revs': dic_min_error_rev}
@@ -126,14 +125,14 @@ def on_stop_check():
         printer.errprint('后台并没有正在自检\n')
 
 @socketio.on('req_revision_info')
-def req_revision_info(checker_name, offset, count):
+def req_revision_info(checker_name, offset, count, search):
     # 一页个数最大不超过20个
     if count > 20:
         count = 20
 
-    total = main.get_report_total_cnt(checker_name)
+    total = main.get_report_total_cnt(checker_name, search)
     emit('ack_report_total', {'offset': offset, 'total': total, 'time': time.time()})
-    rev_list = main.get_revisions_list(checker_name, offset, count)
+    rev_list = main.get_revisions_list(checker_name, offset, count, search)
     msg = {"offset": offset, "data": rev_list}
     emit('ack_revision_info', msg)
 
@@ -176,7 +175,7 @@ def load_min_err_rev_dic():
         if value == 0:
             dic_min_error_rev[key] = config.get_check_revision_start()
 
-if __name__ == '__main__':
+def init():
     printer.set_handler(print_handler)
     progressbar.set_handler(progressbar_handler)
     scheduler = BackgroundScheduler()
@@ -193,4 +192,6 @@ if __name__ == '__main__':
     if len(message_logs) == 0:
         message_logs.append('<p class="text-primary">Written by <strong>Marskey</strong></p>')
 
+if __name__ == '__main__':
+    init()
     socketio.run(app, debug=True, host="0.0.0.0", port=5001)

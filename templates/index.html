@@ -34,6 +34,10 @@
             -webkit-box-shadow: inset 0 -1px 0 rgba(217, 83, 79, .25);
             box-shadow: inset 0 -1px 0 rgba(217, 83, 79, .25);
         }
+    
+        input[type="search"]::-webkit-search-cancel-button {
+            -webkit-appearance: searchfield-cancel-button;
+        }
     </style>
 </head>
 
@@ -61,6 +65,9 @@
         <div class="row">
             <div class="col-sm-8 col-md-8 main">
                 <div style="min-height: 700px;">
+                    <div style="padding-bottom: 10px; width: 30%;">
+                        <input id="search_input" type="search" class="ftolong form-control" placeholder="Search...">
+                    </div>
                     <table class="table table-bordered table-striped;" style="table-layout: fixed;">
                         <thead>
                             <tr>
@@ -82,8 +89,8 @@
                 </div>
             </div>
             <div id="sidepanel" class="col-xs-4 col-sm-4 col-md-4" style="right: 15px; ">
-                <div class="panel panel-default" >
-                    <div class="panel-heading" >
+                <div class="panel panel-default">
+                    <div class="panel-heading">
                         <div class="input-group ">
                             <span class="input-group-btn">
                                 <button id="check_btn" class="btn btn-success" type="button">

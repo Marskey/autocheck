@@ -60,20 +60,20 @@ def do_check(rev_start, rev_end, checker_name) -> int:
     printer.aprint('{0}检查结束...'.format(checker.get_name()))
     return min_error_rev
 
-def get_revisions_list(checker_name, offset, count):
+def get_revisions_list(checker_name, offset, count, search):
     if checker_mgr.get_checker(checker_name) is None:
         printer.aprint('找不到该检查机：{0}'.format(checker_name))
         return {}
 
     code_checker = checker_mgr.get_checker(checker_name)
-    rev_list = code_checker.get_result(offset, count)
+    rev_list = code_checker.get_result(offset, count, search)
     return rev_list
 
-def get_report_total_cnt(checker_name):
+def get_report_total_cnt(checker_name, search):
     code_checker = checker_mgr.get_checker(checker_name)
     if code_checker is None:
         return 0
-    return code_checker.get_result_total_cnt()
+    return code_checker.get_result_total_cnt(search)
 
 def get_checker_name_list():
     return checker_mgr.get_checker_name_list()
