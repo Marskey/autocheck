@@ -24,7 +24,7 @@
             -o-transition: none !important;
             transition: none !important;
         }
-    
+
         .err-log {
             padding: 2px 4px;
             font-size: 90%;
@@ -34,9 +34,35 @@
             -webkit-box-shadow: inset 0 -1px 0 rgba(217, 83, 79, .25);
             box-shadow: inset 0 -1px 0 rgba(217, 83, 79, .25);
         }
-    
+
+        .search-highlight {
+            padding: 2px 0px;
+            font-size: 100%;
+            color: #fff;
+            background-color: #ec971f;
+            border-radius: 0px;
+            -webkit-box-shadow: inset 0 -1px 0 rgba(213, 133, 18, .25);
+            box-shadow: inset 0 -1px 0 rgba(213, 133, 18, .25);
+        }
+
         input[type="search"]::-webkit-search-cancel-button {
             -webkit-appearance: searchfield-cancel-button;
+        }
+    
+        ::-webkit-input-placeholder {
+            font-style: italic;
+        }
+    
+        :-moz-placeholder {
+            font-style: italic;
+        }
+    
+        ::-moz-placeholder {
+            font-style: italic;
+        }
+    
+        :-ms-input-placeholder {
+            font-style: italic;
         }
     </style>
 </head>
@@ -66,7 +92,7 @@
             <div class="col-sm-8 col-md-8 main">
                 <div style="min-height: 700px;">
                     <div style="padding-bottom: 10px; width: 30%;">
-                        <input id="search_input" type="search" class="ftolong form-control" placeholder="Search...">
+                        <input id="search_input" style="border-radius: 25px;" type="search" class="ftolong form-control" placeholder="Search...">
                     </div>
                     <table class="table table-bordered table-striped;" style="table-layout: fixed;">
                         <thead>
@@ -151,7 +177,8 @@
                 <p>本工具定时9点， 12点， 15点， 18点， 21点的时候立即检查, 检查区间为上次检查没有错误的最小版本到最新的版本</p>
                 <pre><strong>提示 </strong>初次使用该工具可以在config.py中配置第一次检查的起始版本号</pre>
                 <p>直接点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来执行检查流程</p>
-                <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查</pre>
+                <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查<br>
+     搜索功能暂时不支持中文搜索(有了解的人请M我！)</pre>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>

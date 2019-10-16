@@ -38,8 +38,8 @@ class PVSStudioChecker(IChecker):
         if search != "":
             db_res = db.execute("select file_path from "
                                   + self.CONST_TABLE_NAME
-                                  + "_fts where body match ?", ["*" + search + "*"], True, False)
-            condition = '\'' + '\',\''.join(str(fp['file_path']) for fp in db_res) + '\''
+                                  + "_fts where body like '%{0}%'".format(search), [], False, False)
+            condition = '\'' + '\',\''.join(fp[0] for fp in db_res) + '\''
             sql = "SELECT * FROM " + self.CONST_TABLE_NAME + " WHERE file_path in ({0}) LIMIT ?, ?".format(condition)
 
         for row in db.execute(sql, (offset, count), False, False):
@@ -77,8 +77,8 @@ class PVSStudioChecker(IChecker):
         if search != "":
             return db.execute("select count(file_path) from "
                               + self.CONST_TABLE_NAME
-                              + "_fts where body match ?"
-                              , ["*" + search + "*"]
+                              + "_fts where body like '%{0}%'".format(search)
+                              , []
                               , False
                               , False)
 
@@ -215,10 +215,11 @@ class PVSStudioChecker(IChecker):
                     if min_rev_has_error > cur_file_min_rev:
                         min_rev_has_error = cur_file_min_rev
 
+                    body_str = '{0} {1} {2}'.format(project, filename, log_str)
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
                                + "_fts values (?, ?);"
-                               , (src_path, '{0} {1} {2}'.format(project, filename, log_str))
+                               , (src_path, body_str)
                                , False
                                , True)
                     

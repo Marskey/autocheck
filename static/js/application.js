@@ -112,10 +112,10 @@ $(document).ready(function(){
             value = msg.data[key];
             var row = "<tr>"
             // project
-            row += "<td style='overflow-wrap: break-word;' title='" + value.project + "'>" + value.project + "</td>"
+            row += "<td style='overflow-wrap: break-word;' >" + value.project + "</td>"
 
             // file
-            row += "<td style='overflow-wrap: break-word;' title='" + value.file + "'>" + value.file + "</td>"
+            row += "<td style='overflow-wrap: break-word;' >" + value.file + "</td>"
 
             // time
             row += "<td>" + value.time + "</td>"
@@ -142,6 +142,12 @@ $(document).ready(function(){
                 row += "</tbody></table></div></td><tr>"
             }
 
+            if ($('#search_input').val() != "") {
+                var regEx = new RegExp("(<td[^>]*>[^<]*?)(" + $('#search_input').val() + ")(.*?<\/td>)", 'ig')
+                row = row.replace(regEx, "$1<span class='search-highlight'>$2</span>$3")
+            }
+
+            console.log(row)
             $('#table_container').append(row);
         })
     })
@@ -252,6 +258,7 @@ $(document).ready(function(){
     $("#local_src_dir").val(local_dir)
     $("#local_src_dir").attr('title', local_dir)
     checkHasLocalDir()
+    $("#search_input").val(getCookie('search'))
 
     function checkHasLocalDir() {
         if ($("#local_src_dir").val() == "") {
@@ -337,11 +344,11 @@ $(document).ready(function(){
         $('#pagination').html(pre_page + first_page + contain + last_page + next_page)
     }
 
-    $('#search_input').on("keyup", function (e) {
-        if (e.keyCode == 13) {
-            req_revision_info()
-        }
-    });
+    $('#search_input').on("search", function (e) {
+        setCookie('search', $(this).val())
+        req_revision_info()
+    })
+
 });
 
 $(document).scroll(function () {
