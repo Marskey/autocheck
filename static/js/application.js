@@ -142,8 +142,9 @@ $(document).ready(function(){
                 row += "</tbody></table></div></td><tr>"
             }
 
+            row = row.replace(/[\r\n]/, "<br>")
             if ($('#search_input').val() != "") {
-                var regEx = new RegExp("(<td[^>]*>[^<]*?)(" + $('#search_input').val() + ")((.|[\r\n])*?<\/td>)", 'ig')
+                var regEx = new RegExp("(<td[^>]*>[^<]*?)(" + $('#search_input').val() + ")(.*?<\/td>)", 'ig')
                 row = row.replace(regEx, "$1<span class='search-highlight'>$2</span>$3")
             }
 
