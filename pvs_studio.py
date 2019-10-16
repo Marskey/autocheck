@@ -80,9 +80,9 @@ class PVSStudioChecker(IChecker):
                               + "_fts where body like '%{0}%'".format(search)
                               , []
                               , False
-                              , False)
+                              , False)[0][0]
 
-        return db.execute("select count(rowid) from " + self.CONST_TABLE_NAME, [], False, False)
+        return db.execute("select count(rowid) from " + self.CONST_TABLE_NAME, [], False, False)[0][0]
 
     # 转换plog成html格式
     def __convert_to_html(self, plog_path)->bool:

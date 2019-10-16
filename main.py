@@ -69,7 +69,7 @@ def get_revisions_list(checker_name, offset, count, search):
     rev_list = code_checker.get_result(offset, count, search)
     return rev_list
 
-def get_report_total_cnt(checker_name, search):
+def get_report_total_cnt(checker_name, search) -> int:
     code_checker = checker_mgr.get_checker(checker_name)
     if code_checker is None:
         return 0
