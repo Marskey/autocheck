@@ -108,7 +108,6 @@ $(document).ready(function(){
     // 版本信息回包处理
     socket.on('ack_revision_info', (msg) => {
         $('#table_container').html("");
-        $('#result_real').html(msg.data.length)
         Object.keys(msg.data).sort().reverse().forEach((key) => {
             value = msg.data[key];
             var row = "<tr>"
