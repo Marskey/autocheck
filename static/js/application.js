@@ -345,6 +345,7 @@ $(document).ready(function(){
     }
 
     $('#search_input').on("search", function (e) {
+        $(this).val($(this).val().trim())
         setCookie('search', $(this).val())
         window.location.href = "?offset=0"
         req_revision_info()
