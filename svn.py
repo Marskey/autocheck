@@ -53,6 +53,18 @@ class TinySvn(TinySrcController):
             res[revision] = {'author': author, 'msg': msg}
         return res
 
+    def get_blame_log(self, start, end, file):
+        ret = subprocess.check_output(
+            'svn blame -v -r{0}:{1} {2}'.format(start, end, self.local_path + file))
+        ret_str = ret.decode('utf-8')
+        lines = ret_str.split('\n')
+        blame_lnum = []
+        for i, line in enumerate(lines):
+            if not line.startswith('     -'):
+                blame_lnum.append(i)
+
+        return blame_lnum
+
     def __get_url_root(self):
         ret = subprocess.check_output(
             'svn info "{}" --xml'.format(self.local_path))
