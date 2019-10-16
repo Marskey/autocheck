@@ -147,7 +147,6 @@ $(document).ready(function(){
                 row = row.replace(regEx, "$1<span class='search-highlight'>$2</span>$3")
             }
 
-            console.log(row)
             $('#table_container').append(row);
         })
     })
