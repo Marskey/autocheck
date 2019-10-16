@@ -53,7 +53,7 @@ class PVSStudioChecker(IChecker):
             html_file_path = ""
             if not report_path == "":
                 if not os.path.exists(report_path): 
-                    printer.errprint("cannot find report file: " + report_path)
+                    printer.errprint("cannot find report file: " + report_path + ", src_file: " + file_path)
                     continue
                 report_filename = os.path.splitext(report_path)[0].split("\\")[-1]
                 html_file_path = "{0}\\{1}\\index.html".format(config.get_dir_pvs_report(), report_filename)
