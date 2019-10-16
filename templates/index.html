@@ -88,12 +88,21 @@
     </nav>
     <div class="container-fluid" style="padding-top: 50px">
         <h1 class="page-header">List of revisions</h1>
+            <form class="form-inline">
+                <div class="form-group">
+                    <div style="padding-bottom: 10px; width: 30%;">
+                        <input id="search_input" style="border-radius: 25px;" type="search" class="form-control"
+                            placeholder="Search...">
+                    </div>
+                </div>
+                <div class="form-group" style="padding-bottom: 10px;">
+                    <span id="result_real" class="badge" style="background-color: #5cb85c;"></span>
+                    <span id="result" class="badge"></span>
+                </div>
+            </form>
         <div class="row">
             <div class="col-sm-8 col-md-8 main">
                 <div style="min-height: 700px;">
-                    <div style="padding-bottom: 10px; width: 30%;">
-                        <input id="search_input" style="border-radius: 25px;" type="search" class="ftolong form-control" placeholder="Search...">
-                    </div>
                     <table class="table table-bordered table-striped;" style="table-layout: fixed;">
                         <thead>
                             <tr>
@@ -177,6 +186,10 @@
                 <p>本工具定时9点， 12点， 15点， 18点， 21点的时候立即检查, 检查区间为上次检查没有错误的最小版本到最新的版本</p>
                 <pre><strong>提示 </strong>初次使用该工具可以在config.py中配置第一次检查的起始版本号</pre>
                 <p>直接点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来执行检查流程</p>
+                <p>搜索栏旁的两个数字：</p>
+                <span class="badge" style="background-color: #5cb85c;">4</span>
+                <span class="badge">5</span>
+                <p>绿色表示实际数据数量, 灰色表示数据库总有数, 因为可能生成过程中导致报告丢失两份数据不匹配</p>
                 <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查<br>
      搜索功能暂时不支持中文搜索(有了解的人请M我！)</pre>
             </div>

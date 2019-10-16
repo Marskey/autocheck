@@ -189,9 +189,6 @@ def init():
     job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
 
-    if len(message_logs) == 0:
-        message_logs.append('<p class="text-primary">Written by <strong>Marskey</strong></p>')
-
 if __name__ == '__main__':
     init()
     socketio.run(app, debug=True, host="0.0.0.0", port=5001)

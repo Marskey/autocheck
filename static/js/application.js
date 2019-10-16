@@ -108,6 +108,7 @@ $(document).ready(function(){
     // 版本信息回包处理
     socket.on('ack_revision_info', (msg) => {
         $('#table_container').html("");
+        $('#result_real').html(msg.data.length)
         Object.keys(msg.data).sort().reverse().forEach((key) => {
             value = msg.data[key];
             var row = "<tr>"
@@ -156,6 +157,7 @@ $(document).ready(function(){
         var server_time = parseInt(data.time)
         server_time_offset = server_time - parseInt(new Date().getTime() / 1000)
         show_left_time();
+        $('#result').html(data.total)
     })
 
     $("#check_btn").on('click', function () {
