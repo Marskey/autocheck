@@ -50,7 +50,7 @@ def do_check(rev_start, rev_end, checker_name) -> int:
     printer.aprint('获取区间版本r{0}至r{1}的差异文件完成'.format(rev_start, rev_end))
 
     # 总数乘以2是因为要先准备一次文件
-    progressbar.set_total(len(changed_files) * 2 * len(checker_mgr.get_checker_name_list()))
+    progressbar.set_total(len(changed_files) * len(checker_mgr.get_checker_name_list()))
     # 检查代码
     printer.aprint('检查r{0}至r{1}代码中...'.format(rev_start, rev_end))
 

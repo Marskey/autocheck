@@ -8,6 +8,7 @@ import time
 import json
 import progressbar
 import printer
+import hashlib
 
 class PVSStudioChecker(IChecker):
     CONST_TABLE_NAME = "pvs_reports"
@@ -24,6 +25,7 @@ class PVSStudioChecker(IChecker):
 
     def check(self, changed_files)->int:
         # 生成要检查源码文件集合的xml文件
+        printer.aprint('准备文件中...')
         self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
         printer.aprint(self.get_name() + '生成plog...')
@@ -104,9 +106,7 @@ class PVSStudioChecker(IChecker):
 
     def __gen_src_filters(self, changes):
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
-        num = 0
         for file_path, logs in changes.items():
-            printer.aprint('准备文件:' + file_path)
             xmlRoot = etree.Element('SourceFilesFilters')
             source_files = etree.SubElement(xmlRoot, 'SourceFiles')
             path = etree.SubElement(source_files, 'Path')
@@ -121,10 +121,7 @@ class PVSStudioChecker(IChecker):
                 logXml.set('msg', log['msg'])
 
             tree = etree.ElementTree(xmlRoot)
-            tree.write("temp/{0}.xml".format(num), encoding='utf-8')
-            num += 1
-            # 更新进度条用
-            progressbar.add(1)
+            tree.write("temp/{0}.xml".format(hashlib.sha1(file_path)), encoding='utf-8')
 
     def __gen_plog(self):
         # 最早一个拥有错误的版本，用来以后检查的起始点
@@ -135,14 +132,14 @@ class PVSStudioChecker(IChecker):
             for file in filenames:
                 file_path = os.path.join(parent, file)
                 filename = os.path.splitext(file)[0]
-                output_file_path = "{0}\\file{1}.plog".format(
+                output_file_path = "{0}\\{1}.plog".format(
                     config.get_dir_pvs_plogs()
                     , filename)
 
                 if os.path.exists(output_file_path):
                     os.remove(output_file_path)
 
-                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --platform "win32" --configuration "Release" -f "{2}"'.format(config.get_dir_sln()
+                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --platform "win32" --configuration "Release" -f "{2}" 2>>pvs_err.log'.format(config.get_dir_sln()
                     , output_file_path
                     , file_path))
 
