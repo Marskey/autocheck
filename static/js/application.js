@@ -66,17 +66,14 @@ $(document).ready(function(){
             $('.progress-bar').removeClass("progress-bar-success");
             $('.progress-bar').removeClass("progress-bar-danger");
             $('.panel-footer').css('border-color', "#ddd")
-        } 
-
-        if (!$('.progress').is(":visible")) {
-            // 快速开启
             $('.progress-bar').addClass('notransition')
             $('.progress-bar').css('width', percent + '%');
             $('.progress-bar').removeClass('notransition')
-            $('.progress').slideToggle('fast');
+            // 快速开启
+            $('.progress').slideUp('fast');
+        } else {
+            $('.progress-bar').css('width', percent + '%');
         }
-
-        $('.progress-bar').css('width', percent + '%');
 
         if (percent == 100) {
             var progressbar_color = "progress-bar-success"
@@ -91,7 +88,7 @@ $(document).ready(function(){
             $('.panel-footer').css('border-color', board_color)
             if ($('.progress').is(":visible")) {
                 // 关闭
-                $('.progress').slideToggle('slow');
+                $('.progress').slideDown('slow');
             }
         }
     })
