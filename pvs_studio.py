@@ -121,7 +121,7 @@ class PVSStudioChecker(IChecker):
                 logXml.set('msg', log['msg'])
 
             tree = etree.ElementTree(xmlRoot)
-            tree.write("temp/{0}.xml".format(hashlib.sha1(file_path)), encoding='utf-8')
+            tree.write("temp/{0}.xml".format(hashlib.sha1(file_path.encode()).hexdigest()), encoding='utf-8')
 
     def __gen_plog(self):
         # 最早一个拥有错误的版本，用来以后检查的起始点
