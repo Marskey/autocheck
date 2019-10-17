@@ -69,8 +69,6 @@ $(document).ready(function(){
             $('.progress-bar').addClass('notransition')
             $('.progress-bar').css('width', percent + '%');
             $('.progress-bar').removeClass('notransition')
-            // 快速开启
-            $('.progress').slideUp('fast');
         } else {
             $('.progress-bar').css('width', percent + '%');
         }
@@ -86,10 +84,9 @@ $(document).ready(function(){
 
             $('.progress-bar').addClass(progressbar_color);
             $('.panel-footer').css('border-color', board_color)
-            if ($('.progress').is(":visible")) {
-                // 关闭
-                $('.progress').slideDown('slow');
-            }
+            $('.progress').slideUp('slow');
+        } else {
+            $('.progress').slideDown('fast');
         }
     })
 
