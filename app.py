@@ -61,7 +61,7 @@ def stop_thread(_thread):
 
 # 后台线程 产生数据，即刻推送至前端
 def background_thread_check():
-    global checker_thread, dic_min_error_rev
+    global checker_thread, dic_min_error_rev, thread_lock
     try:
         dic_min_error_rev = main.do_auto_check(dic_min_error_rev)
         file = open("./dic_min_error_rev", "w")
@@ -94,7 +94,7 @@ def download(filename):
 
 @socketio.on('connect')
 def on_connect():
-    global cur_progress, dic_min_error_rev
+    global cur_progress, dic_min_error_rev, checker_thread
 
     print('Client connected\n')
     for log in message_logs:
@@ -147,8 +147,8 @@ def start_check():
         printer.aprint('正在自检\n')
 
 def auto_check():
+    global thread_lock, checker_thread
     with thread_lock:
-        global checker_thread
         if checker_thread is None:
             printer.aprint('立即检查\n')
             socketio.emit('checker_state', 1)
