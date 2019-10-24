@@ -49,7 +49,7 @@ def _async_raise(tid, exctype):
 def print_handler(msg):
     socketio.emit('server_log', msg)
     socketio.sleep(0.1)
-    if len(message_logs) >= 12:
+    if len(message_logs) >= 30:
         message_logs.pop(0)
     message_logs.append(msg)
 
