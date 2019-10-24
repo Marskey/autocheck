@@ -139,7 +139,7 @@ class PVSStudioChecker(IChecker):
                 if os.path.exists(output_file_path):
                     os.remove(output_file_path)
 
-                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --platform "Release|Win32" --configuration "Release" -f "{2}" --settings "{3}" 2>>pvs_err.log'.format(config.get_dir_sln()
+                ret = os.system('pvs-studio_cmd.exe --target "{0}" --output "{1}" --configuration "Release" -f "{2}" --settings "{3}" 2>>pvs_err.log'.format(config.get_dir_sln()
                     , output_file_path
                     , file_path
                     , config.get_path_pvs_setting()))
@@ -170,7 +170,7 @@ class PVSStudioChecker(IChecker):
                 has_error = True
                 if ret == 0:
                     has_error = False
-                print("pvs-studio ret: " + ret)
+                print("pvs-studio ret: " + str(ret))
 
                 cur_file_min_rev = 9999999
                 logs_json = []
