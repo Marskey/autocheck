@@ -170,6 +170,7 @@ class PVSStudioChecker(IChecker):
                 has_error = True
                 if ret == 0:
                     has_error = False
+                print("pvs-studio ret: " + ret)
 
                 cur_file_min_rev = 9999999
                 logs_json = []

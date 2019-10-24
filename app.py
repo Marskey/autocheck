@@ -72,6 +72,7 @@ def background_thread_check():
     except Exception as ex:
         printer.errprint(ex)
         printer.errprint("检查意外结束")
+        progressbar.update(-100)
     with thread_lock:
         checker_thread = None
         socketio.emit('checker_state', 0)
