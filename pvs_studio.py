@@ -144,28 +144,28 @@ class PVSStudioChecker(IChecker):
                     , file_path
                     , config.get_path_pvs_setting()))
 
-                # if (ret & 1) / 1 == 1:
-                #     print("FilesFail")
-                # if (ret & 2) / 2 == 1:
-                #     print("GeneralExeption")
-                # if (ret & 4) / 4 == 1:
-                #     print("IncorrectArguments")
-                # if (ret & 8) / 8 == 1:
-                #     print("FileNotFound")
-                # if (ret & 16) / 16 == 1:
-                #     print("IncorrectCfg")
-                # if (ret & 32) / 32 == 1:
-                #     print("InvalidSolution")
-                # if (ret & 64) / 64 == 1:
-                #     print("IncorrectExtension")
-                # if (ret & 128) / 128 == 1:
-                #     print("IncorrectLicense")
-                # if (ret & 256) / 256 == 1:
-                #     print("AnalysisDiff")
-                # if (ret & 512) / 512 == 1:
-                #     print("SuppressFail")
-                # if (ret & 1024) / 1024 == 1:
-                #     print("LicenseRenewal")
+                if (ret & 1) / 1 == 1:
+                    printer.errprint("PVS-Studio error msg: FilesFail")
+                if (ret & 2) / 2 == 1:
+                    printer.errprint("PVS-Studio error msg: GeneralExeption")
+                if (ret & 4) / 4 == 1:
+                    printer.errprint("PVS-Studio error msg: IncorrectArguments")
+                if (ret & 8) / 8 == 1:
+                    printer.errprint("PVS-Studio error msg: FileNotFound")
+                if (ret & 16) / 16 == 1:
+                    printer.errprint("PVS-Studio error msg: IncorrectCfg")
+                if (ret & 32) / 32 == 1:
+                    printer.errprint("PVS-Studio error msg: InvalidSolution")
+                if (ret & 64) / 64 == 1:
+                    printer.errprint("PVS-Studio error msg: IncorrectExtension")
+                if (ret & 128) / 128 == 1:
+                    printer.errprint("PVS-Studio error msg: IncorrectLicense")
+                if (ret & 256) / 256 == 1:
+                    printer.errprint("PVS-Studio error msg: AnalysisDiff")
+                if (ret & 512) / 512 == 1:
+                    printer.errprint("PVS-Studio error msg: SuppressFail")
+                if (ret & 1024) / 1024 == 1:
+                    printer.errprint("PVS-Studio error msg: LicenseRenewal")
 
                 has_error = True
                 if ret == 0:
