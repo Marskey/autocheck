@@ -145,27 +145,27 @@ class PVSStudioChecker(IChecker):
                     , config.get_path_pvs_setting()))
 
                 if (ret & 1) / 1 == 1:
-                    printer.errprint("PVS-Studio error msg: FilesFail")
+                    printer.errprint("PVS-Studio: error (crash) during analysis of some source file(s)")
                 if (ret & 2) / 2 == 1:
-                    printer.errprint("PVS-Studio error msg: GeneralExeption")
+                    printer.errprint("PVS-Studio: GeneralExeption")
                 if (ret & 4) / 4 == 1:
-                    printer.errprint("PVS-Studio error msg: IncorrectArguments")
+                    printer.errprint("PVS-Studio: some of the command line arguments passed to the tool were incorrect")
                 if (ret & 8) / 8 == 1:
-                    printer.errprint("PVS-Studio error msg: FileNotFound")
+                    printer.errprint("PVS-Studio: specified project, solution or analyzer settings file were not found")
                 if (ret & 16) / 16 == 1:
-                    printer.errprint("PVS-Studio error msg: IncorrectCfg")
+                    printer.errprint("PVS-Studio: specified configuration and (or) platform were not found in a solution file")
                 if (ret & 32) / 32 == 1:
-                    printer.errprint("PVS-Studio error msg: InvalidSolution")
+                    printer.errprint("PVS-Studio: solution file or project is not supported or contains errors")
                 if (ret & 64) / 64 == 1:
-                    printer.errprint("PVS-Studio error msg: IncorrectExtension")
+                    printer.errprint("PVS-Studio: incorrect extension of analyzed project or solution")
                 if (ret & 128) / 128 == 1:
-                    printer.errprint("PVS-Studio error msg: IncorrectLicense")
+                    printer.errprint("PVS-Studio: incorrect or out-of-date analyzer license")
                 if (ret & 256) / 256 == 1:
-                    printer.errprint("PVS-Studio error msg: AnalysisDiff")
+                    printer.warnprint("PVS-Studio: some issues were found in the source code")
                 if (ret & 512) / 512 == 1:
-                    printer.errprint("PVS-Studio error msg: SuppressFail")
+                    printer.errprint("PVS-Studio: some issues were encountered while performing analyzer message suppression")
                 if (ret & 1024) / 1024 == 1:
-                    printer.errprint("PVS-Studio error msg: LicenseRenewal")
+                    printer.errprint("PVS-Studio: indicates that analyzer license will expire in less than a month")
 
                 has_error = True
                 if ret == 0:
