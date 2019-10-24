@@ -116,15 +116,16 @@ def on_disconnect():
 
 @socketio.on('stop_check')
 def on_stop_check():
-    global checker_thread
-    if checker_thread is not None:
-        printer.errprint('客户停止了自检\n')
-        stop_thread(checker_thread)
-        checker_thread = None
-        socketio.emit('checker_state', 0)
-        progressbar.update(-100)
-    else:
-        printer.errprint('后台并没有正在自检\n')
+    global checker_thread, thread_lock
+    with thread_lock:
+        if checker_thread is not None:
+            printer.errprint('客户停止了自检\n')
+            stop_thread(checker_thread)
+            checker_thread = None
+            socketio.emit('checker_state', 0)
+            progressbar.update(-100)
+        else:
+            printer.errprint('后台并没有正在自检\n')
 
 @socketio.on('req_revision_info')
 def req_revision_info(checker_name, offset, count, search):
