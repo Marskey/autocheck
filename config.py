@@ -6,6 +6,7 @@ URL_SVN  = 'https://10.0.3.3/svn/Star/01. Develop/05. Source/02. Server/Star2'
 
 DIR_PVS_PLOGS = 'check_results\\pvs_plogs'
 DIR_PVS_REPORTS = 'static\\reports\\pvs_reports'
+PATH_PVS_SETTING = 'setting\\pvs_studio\\Settings.xml'
 
 DIR_CPP_CHECK_RES = 'check_results\\cppcheck_res'
 DIR_CPP_CHECK_REPORTS = 'static\\reports\\cppcheck_reports'
@@ -26,6 +27,9 @@ def get_dir_pvs_plogs():
 
 def get_dir_pvs_report():
     return DIR_PVS_REPORTS
+
+def get_path_pvs_setting():
+    return PATH_PVS_SETTING
 
 def get_dir_cpp_check_res():
     return DIR_CPP_CHECK_RES
