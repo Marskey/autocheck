@@ -94,14 +94,16 @@ def download(filename):
 
 @socketio.on('connect')
 def on_connect():
-    global cur_progress, dic_min_error_rev, checker_thread
+    global cur_progress, dic_min_error_rev, checker_thread, thread_lock
 
     print('Client connected\n')
     for log in message_logs:
         socketio.emit('server_log', log)
     checker_state = 0
-    if checker_thread is not None:
-        checker_state = 1
+
+    with thread_lock:
+        if checker_thread is not None:
+            checker_state = 1
 
     checker_list = main.get_checker_name_list()
     progressbar.update(cur_progress)
@@ -138,13 +140,14 @@ def req_revision_info(checker_name, offset, count, search):
 
 @socketio.on('start_check')
 def start_check():
-    global checker_thread
-    if checker_thread is None:
-        printer.aprint('立即检查\n')
-        socketio.emit('checker_state', 1)
-        checker_thread = socketio.start_background_task(target=background_thread_check)
-    else:
-        printer.aprint('正在自检\n')
+    global thread_lock, checker_thread
+    with thread_lock:
+        if checker_thread is None:
+            printer.aprint('立即检查\n')
+            socketio.emit('checker_state', 1)
+            checker_thread = socketio.start_background_task(target=background_thread_check)
+        else:
+            printer.aprint('正在自检\n')
 
 def auto_check():
     global thread_lock, checker_thread
