@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, Response
 from threading import Lock
 from apscheduler.schedulers.background import BackgroundScheduler
 from db_mgr import EasySqlite
+from datetime import timedelta
 import inspect
 import ctypes
 import config
@@ -17,6 +18,7 @@ import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 app.debug = True
 
 # turn the flask app into a socketio app
