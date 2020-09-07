@@ -118,7 +118,10 @@ class PVSStudioChecker(IChecker):
                 logXml = etree.SubElement(logsXml, 'log')
                 logXml.set('rev', log['rev'])
                 logXml.set('author', log['author'])
-                logXml.set('msg', log['msg'])
+                if log['msg'] != None:
+                    logXml.set('msg', log['msg'])
+                else:
+                    logXml.set('msg', '')
 
             tree = etree.ElementTree(xmlRoot)
             tree.write("temp/{0}.xml".format(hashlib.sha1(file_path.encode()).hexdigest()), encoding='utf-8')

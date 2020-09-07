@@ -33,7 +33,7 @@ class CppChecker(IChecker):
 
             report_file_path = ""
             if not xml_path == "":
-                if os.path.exists(xml_path): 
+                if os.path.exists(xml_path):
                     report_file_path = "{0}\\r{1}\\index.html".format(config.get_dir_cpp_check_report(), revision)
                     if not os.path.exists(report_file_path):
                         revs = []

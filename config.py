@@ -1,8 +1,8 @@
 import urllib
 
-DIR_SLN  = "e:\\igg\\star2\source\\star2.sln"
-DIR_SRC  = "e:\\igg\\star2\\source"
-URL_SVN  = 'https://10.0.3.3/svn/Star/01. Develop/05. Source/02. Server/Star2'
+DIR_SLN  = "E:\\IGG\\COLX\\src\\Server\\Develop\\Project\\COLX.sln"
+DIR_SRC  = "E:\\IGG\\COLX\\src\\Server\\Develop\\Project"
+URL_SVN  = "https://10.0.3.3/svn/colx/Server/Develop/Project"
 
 DIR_PVS_PLOGS = 'check_results\\pvs_plogs'
 DIR_PVS_REPORTS = 'static\\reports\\pvs_reports'
@@ -11,7 +11,7 @@ PATH_PVS_SETTING = 'setting\\pvs_studio\\Settings.xml'
 DIR_CPP_CHECK_RES = 'check_results\\cppcheck_res'
 DIR_CPP_CHECK_REPORTS = 'static\\reports\\cppcheck_reports'
 
-REVISION_START = 45051
+REVISION_START = 1921
 
 def get_url_svn():
     return URL_SVN

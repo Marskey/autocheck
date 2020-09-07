@@ -15,6 +15,8 @@ import time
 import os
 import re
 import json
+import sys
+import traceback
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -70,7 +72,22 @@ def background_thread_check():
         file.write(json.dumps(dic_min_error_rev))
         file.close()
     except Exception as ex:
-        printer.errprint(ex)
+        # Get current system exception
+        ex_type, ex_value, ex_traceback = sys.exc_info()
+
+        # Extract unformatter stack traces as tuples
+        trace_back = traceback.extract_tb(ex_traceback)
+
+        # Format stacktrace
+        stack_trace = list()
+
+        for trace in trace_back:
+            stack_trace.append("File : %s , Line : %d, Func.Name : %s, Message : %s" % (
+                trace[0], trace[1], trace[2], trace[3]))
+
+        printer.errprint("Exception type : %s " % ex_type.__name__)
+        printer.errprint("Exception message : %s" % ex_value)
+        printer.errprint("Stack trace : %s" % stack_trace)
         printer.errprint("检查意外结束")
         progressbar.update(-100)
     with thread_lock:
