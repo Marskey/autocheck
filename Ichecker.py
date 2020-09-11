@@ -20,3 +20,11 @@ class IChecker:
     @abstractmethod
     def get_result_total_cnt(self, search)->int:
         pass
+
+    @abstractmethod
+    def get_config(self)->str:
+        pass
+
+    @abstractmethod
+    def set_config(self, json_data):
+        pass

@@ -1,4 +1,5 @@
 import urllib
+from db_mgr import EasySqlite
 
 DIR_SLN  = "E:\\IGG\\COLX\\src\\Server\\Develop\\Project\\COLX.sln"
 DIR_SRC  = "E:\\IGG\\COLX\\src\\Server\\Develop\\Project"
@@ -11,7 +12,7 @@ PATH_PVS_SETTING = 'setting\\pvs_studio\\Settings.xml'
 DIR_CPP_CHECK_RES = 'check_results\\cppcheck_res'
 DIR_CPP_CHECK_REPORTS = 'static\\reports\\cppcheck_reports'
 
-REVISION_START = 1921
+REVISION_START = 4721
 
 def get_url_svn():
     return URL_SVN
@@ -39,3 +40,12 @@ def get_dir_cpp_check_report():
 
 def get_check_revision_start():
     return REVISION_START
+
+def get_exclude_projects():
+    excludeProject = (
+    "libProto"
+    , "libThirdParty"
+    , "CsvCheck"
+    , "RobotClient"
+    )
+    return ";".join(excludeProject)

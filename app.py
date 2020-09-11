@@ -29,7 +29,6 @@ socketio = SocketIO(app)
 checker_thread = None
 thread_lock = Lock()
 message_logs = []
-is_checking = False
 # 当前检查进度
 cur_progress = 100
 dic_min_error_rev = {}
@@ -91,6 +90,7 @@ def background_thread_check():
         printer.errprint("检查意外结束")
         progressbar.update(-100)
     with thread_lock:
+        print("线程结束")
         checker_thread = None
         socketio.emit('checker_state', 0)
 
@@ -159,6 +159,15 @@ def req_revision_info(checker_name, offset, count, search):
     msg = {"offset": offset, "data": rev_list}
     emit('ack_revision_info', msg)
 
+@socketio.on('get_checker_config')
+def get_checker_config(checker_name):
+    data = main.get_checker_config(checker_name)
+    emit('ack_get_checker_config', data)
+
+@socketio.on('set_checker_config')
+def set_checker_config(checker_name, json_data):
+    data = main.set_checker_config(checker_name, json_data)
+
 @socketio.on('start_check')
 def start_check():
     global thread_lock, checker_thread
@@ -166,6 +175,7 @@ def start_check():
         if checker_thread is None:
             printer.aprint('立即检查\n')
             socketio.emit('checker_state', 1)
+            print("手动启动\n")
             checker_thread = socketio.start_background_task(target=background_thread_check)
         else:
             printer.aprint('正在自检\n')
@@ -176,6 +186,7 @@ def auto_check():
         if checker_thread is None:
             printer.aprint('立即检查\n')
             socketio.emit('checker_state', 1)
+            print("定时启动\n")
             checker_thread = socketio.start_background_task(target=background_thread_check)
         else:
             printer.aprint('正在自检\n')
@@ -206,11 +217,11 @@ def init():
 
     load_min_err_rev_dic()
     
-    job = scheduler.get_job("auto_check")
-    if job is not None:
-        scheduler.remove_job("auto_check")
-    # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
-    job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
+    # job = scheduler.get_job("auto_check")
+    # if job is not None:
+    #     scheduler.remove_job("auto_check")
+    # # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
+    # job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
 
 if __name__ == '__main__':

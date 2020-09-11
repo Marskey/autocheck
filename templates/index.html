@@ -58,19 +58,19 @@
         input[type="search"]::-webkit-search-cancel-button {
             -webkit-appearance: searchfield-cancel-button;
         }
-    
+
         ::-webkit-input-placeholder {
             font-style: italic;
         }
-    
+
         :-moz-placeholder {
             font-style: italic;
         }
-    
+
         ::-moz-placeholder {
             font-style: italic;
         }
-    
+
         :-ms-input-placeholder {
             font-style: italic;
         }
@@ -88,6 +88,9 @@
             <form class="navbar-form navbar-right">
                 检查器: <select id="checker_selector" class="selectpicker">
                 </select>
+                <button id="checker_config_btn" class="btn btn-success" type="button">
+                    <span class="glyphicon glyphicon-cog"></span>
+                </button>
                 <div class='form-group'>
                     本地项目目录: <input type="text" id="local_src_dir" class='form-control ' />
                 </div>
@@ -98,17 +101,17 @@
     </nav>
     <div class="container-fluid" style="padding-top: 50px">
         <h1 class="page-header">List of revisions</h1>
-            <form class="form-inline">
-                <div class="form-group">
-                    <div style="padding-bottom: 10px; width: 30%;">
-                        <input id="search_input" style="border-radius: 25px;" type="search" class="form-control"
-                            placeholder="Search...">
-                    </div>
+        <form class="form-inline">
+            <div class="form-group">
+                <div style="padding-bottom: 10px; width: 30%;">
+                    <input id="search_input" style="border-radius: 25px;" type="search" class="form-control"
+                        placeholder="Search...">
                 </div>
-                <div class="form-group" style="padding-bottom: 10px;">
-                    <span id="result" class="badge" style="background-color: #5cb85c;"></span>
-                </div>
-            </form>
+            </div>
+            <div class="form-group" style="padding-bottom: 10px;">
+                <span id="result" class="badge" style="background-color: #5cb85c;"></span>
+            </div>
+        </form>
         <div class="row">
             <div class="col-sm-8 col-md-8 main">
                 <div style="min-height: 700px;">
@@ -148,17 +151,87 @@
                         <div id="log" style="overflow-wrap: break-word;">
                         </div>
                     </div>
-                    <div class="progress" style="border-radius: 0; margin-bottom: 0px; height: 5px; background-color: #d9edf7;" hidden>
+                    <div class="progress"
+                        style="border-radius: 0; margin-bottom: 0px; height: 5px; background-color: #d9edf7;" hidden>
                         <div class="progress-bar" style="width: 60%;">
                         </div>
                     </div>
                     <div class="panel-footer">
-                        <div id="left_time"></div>
+                        <!-- <div id="left_time"></div> -->
                     </div>
                 </div>
             </div>
         </div>
 </body>
+<div class="modal fade" tabindex="-1" id="checkerConfigModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="save_checker_config" type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" tabindex="-1" id="helpModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+                <h4 class="modal-title">Help</h4>
+            </div>
+            <div class="modal-body">
+                <h4 class="page-header">本工具为定时自动检查指定目录中代码用于找出bug和安全漏洞.</h4>
+                <pre><strong>提示 </strong>本工具利用的是第三方的检查工具例如<a href="https://www.viva64.com/en/pvs-studio/">PVS-Studio</a>检查结果与本人无瓜!</pre>
+                <p>上方导航栏中的本地项目目录中请填写使用者本机的对应项目的根目录地址（.sln所存在目录）当点击<a>下载原报告文件</a>时用来替换原报告文件的代码地址方便定位</p>
+                <p>左边的表格内容为当前版本号对应报告分析，表格从左到右从上到下依次为</p>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <img src="static/img/sample.png" class="img-responsive" alt="Responsive image">
+                    </div>
+                    <div class="col-sm-6">
+                        <dl class="dl-horizontal">
+                            <dt>File</dt>
+                            <dd>检查器查出有误的文件名</dd>
+                            <dt>Project</dt>
+                            <dd>项目名字</dd>
+                            <dt>Time</dt>
+                            <dd>检查器完成检查的时间</dd>
+                            <dt>Result</dt>
+                            <dd>检查器给出的报告</dd>
+                            <dd>该文件在检查版本范围内的提交日志</dd>
+                        </dl>
+                    </div>
+                </div>
+                <br>
+                <p>本工具定时9点， 12点， 15点， 18点， 21点的时候立即检查, 检查区间为上次检查没有错误的最小版本到最新的版本</p>
+                <pre><strong>提示 </strong>初次使用该工具可以在config.py中配置第一次检查的起始版本号</pre>
+                <p>直接点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮来执行检查流程</p>
+                <p>搜索栏旁的数字：</p>
+                <span class="badge" style="background-color: #5cb85c;">4</span>
+                <p>用来表示数据数量 </p>
+                <pre><strong>提示 </strong>无论是自动检查还是通过点击 <kbd>立即检查<i class="glyphicon glyphicon-play"></i></kbd> 按钮都会执行所有的检查器进行检查<br>
+     搜索功能暂时不支持中文搜索(有了解的人请M我！)</pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="modal fade" tabindex="-1" id="helpModal">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

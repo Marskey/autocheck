@@ -23,6 +23,15 @@ class CheckerMgr:
             name_list.append(name)
         return name_list
 
+    def get_checker_config(self, name)->str:
+        if name in checkers:
+            return checkers[name].get_config()
+        return ""
+
+    def set_checker_config(self, name, json_data) -> str:
+        if name in checkers:
+            checkers[name].set_config(json_data)
+
     def __register_checker(self, IChecker):
         global checkers
         checkers[IChecker.get_name()] = IChecker

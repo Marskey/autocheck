@@ -19,13 +19,13 @@ checker_mgr = CheckerMgr()
 def do_auto_check(dic_min_rev):
     dic_min_rev_error = {}
     rev_start = config.get_check_revision_start()
-    rev_end   = 'head'
+    rev_end   = 4721
     check_names = get_checker_name_list()
 
     progressbar.set_total(1)
     # 更新代码
     printer.aprint('更新代码...')
-    rev_end = source_controller.updateTo(rev_end)
+    #rev_end = source_controller.updateTo(rev_end)
     progressbar.add(1)
     printer.aprint('已更新代码至r{0}'.format(rev_end))
 
@@ -77,3 +77,9 @@ def get_report_total_cnt(checker_name, search) -> int:
 
 def get_checker_name_list():
     return checker_mgr.get_checker_name_list()
+
+def get_checker_config(checker_name):
+    return checker_mgr.get_checker_config(checker_name)
+
+def set_checker_config(checker_name, json_data):
+    return checker_mgr.set_checker_config(checker_name, json_data)

@@ -154,6 +154,19 @@ $(document).ready(function(){
         $('#result').html(data.total)
     })
 
+    socket.on('ack_get_checker_config', function(data) {
+        var json = JSON.parse(data)
+        for (var key in json) {
+            $('#checkerConfigModal .modal-dialog .modal-content .modal-body .row').html('\
+                    <div>\
+                    <label class="col-sm-2 control-label">'+ key +'</label>\
+                    <div class="col-sm-10">\
+                        <input class="form-control" value="'+ json[key] +'">\
+                    </div></div>')
+        }
+        $('#checkerConfigModal').modal({ keyboard: false });
+    })
+
     $("#check_btn").on('click', function () {
         if (socket != null) {
             if ($(this).hasClass("btn-success")) {
@@ -167,47 +180,47 @@ $(document).ready(function(){
 
     InterValObj = window.setInterval(show_left_time, 1000);
     function show_left_time() {
-        // 9, 12, 15, 18, 21
-        var left_sec = 0;
-        var cur_time = new Date()
-        var event = new Date();
-        if (cur_time.getHours() < 9) {
-            event.setHours(9, 0, 0);
-        } else if (cur_time.getHours() < 12) {
-            event.setHours(12, 0, 0);
-        } else if (cur_time.getHours() < 15) {
-            event.setHours(15, 0, 0);
-        } else if (cur_time.getHours() < 18) {
-            event.setHours(18, 0, 0);
-        } else if (cur_time.getHours() < 21) {
-            event.setHours(21, 0, 0);
-        } else {
-            event.setDate(event.getDate() + 1)
-            event.setHours(9, 0, 0);
-        }
+        // // 9, 12, 15, 18, 21
+        // var left_sec = 0;
+        // var cur_time = new Date()
+        // var event = new Date();
+        // if (cur_time.getHours() < 9) {
+        //     event.setHours(9, 0, 0);
+        // } else if (cur_time.getHours() < 12) {
+        //     event.setHours(12, 0, 0);
+        // } else if (cur_time.getHours() < 15) {
+        //     event.setHours(15, 0, 0);
+        // } else if (cur_time.getHours() < 18) {
+        //     event.setHours(18, 0, 0);
+        // } else if (cur_time.getHours() < 21) {
+        //     event.setHours(21, 0, 0);
+        // } else {
+        //     event.setDate(event.getDate() + 1)
+        //     event.setHours(9, 0, 0);
+        // }
 
-        left_sec = parseInt((event - cur_time + server_time_offset) / 1000);
+        // left_sec = parseInt((event - cur_time + server_time_offset) / 1000);
 
-        var htmlstr = "<h4>距离下次自检还有: ";
-        left_sec = left_sec % (24 * 3600);
-        var hour = parseInt(left_sec / 3600);
-        if (hour != 0) {
-            htmlstr += hour + "小时 ";
-        }
+        // var htmlstr = "<h4>距离下次自检还有: ";
+        // left_sec = left_sec % (24 * 3600);
+        // var hour = parseInt(left_sec / 3600);
+        // if (hour != 0) {
+        //     htmlstr += hour + "小时 ";
+        // }
 
-        left_sec %= 3600;
-        var min = parseInt(left_sec / 60);
-        if (min != 0) {
-            htmlstr += min + "分 ";
-        }
+        // left_sec %= 3600;
+        // var min = parseInt(left_sec / 60);
+        // if (min != 0) {
+        //     htmlstr += min + "分 ";
+        // }
 
-        left_sec %= 60;
-        var sec = left_sec;
-        htmlstr += sec + "秒 ";
+        // left_sec %= 60;
+        // var sec = left_sec;
+        // htmlstr += sec + "秒 ";
 
-        htmlstr += "</h4>"
+        // htmlstr += "</h4>"
 
-        $("#left_time").html(htmlstr);
+        // $("#left_time").html(htmlstr);
     }
 
     socket.on('ack_init_data', (data) => {
@@ -346,6 +359,20 @@ $(document).ready(function(){
         req_revision_info()
     })
 
+    $('#checker_config_btn').on("click", function() {
+        var title = $('#checker_selector').val() + " Config"
+        $('#checkerConfigModal .modal-dialog .modal-content .modal-header .modal-title').html(title)
+        socket.emit('get_checker_config', $("#checker_selector").val());
+    })
+
+    $('#save_checker_config').on("click", function() {
+        var data = {}
+        $('#checkerConfigModal .modal-dialog .modal-content .modal-body .row').children().each(function(i, n) {
+                data[$(n).find(".control-label") .html()] = $(n).find(".col-sm-10 .form-control").val()
+        })
+        socket.emit('set_checker_config', $("#checker_selector").val(), JSON.stringify(data))
+        $('#checkerConfigModal').modal('hide');
+    })
 });
 
 $(document).scroll(function () {
