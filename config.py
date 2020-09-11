@@ -12,7 +12,7 @@ PATH_PVS_SETTING = 'setting\\pvs_studio\\Settings.xml'
 DIR_CPP_CHECK_RES = 'check_results\\cppcheck_res'
 DIR_CPP_CHECK_REPORTS = 'static\\reports\\cppcheck_reports'
 
-REVISION_START = 4721
+REVISION_START = 3837
 
 def get_url_svn():
     return URL_SVN

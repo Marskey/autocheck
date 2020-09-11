@@ -19,7 +19,7 @@ checker_mgr = CheckerMgr()
 def do_auto_check(dic_min_rev):
     dic_min_rev_error = {}
     rev_start = config.get_check_revision_start()
-    rev_end   = 4721
+    rev_end   = 3837
     check_names = get_checker_name_list()
 
     progressbar.set_total(1)

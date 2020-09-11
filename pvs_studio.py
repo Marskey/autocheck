@@ -244,10 +244,16 @@ class PVSStudioChecker(IChecker):
                     for analysisLog in analysisLogs:
                         if analysisLog.find('ErrorCode').text in self.excludedCodes:
                             analysisLogs.remove(analysisLog)
+                            plogXmlRoot.getroot().remove(analysisLog)
 
                     if len(analysisLogs) == 0:
                         os.remove(output_file_path)
+                        progressbar.add(1)
+                        if min_rev_has_error > cur_file_min_rev:
+                            min_rev_has_error = cur_file_min_rev
                         continue
+
+                    plogXmlRoot.write(output_file_path)
 
                     project = analysisLogs[0].find('Project').text
                     filename = analysisLogs[0].find('ShortFile').text

@@ -119,6 +119,8 @@ $(document).ready(function(){
             row += "<a target='_blank' href='" + value.html_path + "'>网页报告</a>"
             row += "<br> "
             row += "<a href='" + value.report_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
+            row += "<br> "
+            row += "<a href=''>忽略</a>"
             row += "</td>"
 
             // newline
