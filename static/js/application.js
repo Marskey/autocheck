@@ -54,12 +54,16 @@ $(document).ready(function(){
         }
     })
 
-    socket.on('checking_progress', function(percent) {
+    socket.on('checking_progress', function(data) {
         var has_excep = false
 
-        if (percent < 0) {
-            percent = Math.abs(percent)
+        var percent = 100
+        if (data.total == 0) {
             has_excep = true
+            $('#text_progress').html("")
+        } else {
+            percent = data.cur / data.total * 100 
+            $('#text_progress').html(data.cur + "/" + data.total)
         }
 
         if (percent == 0) {

@@ -10,13 +10,13 @@ def set_total(total):
     global _total, _cur
     _total = total
     _cur = 0
-    update((_cur / total) * 100)
+    update(_cur, _total)
 
 def add(cnt):
     global _total, _cur
     _cur += cnt
-    update((_cur / _total) * 100)
+    update(_cur, _total)
 
-def update(percent):
+def update(cur, total):
     if _handler is not None:
-        _handler(percent)
+        _handler(cur, total)

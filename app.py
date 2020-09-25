@@ -30,7 +30,8 @@ checker_thread = None
 thread_lock = Lock()
 message_logs = []
 # 当前检查进度
-cur_progress = 100
+cur_progress = 0
+total_progress = 0
 dic_min_error_rev = {}
 
 def _async_raise(tid, exctype):
@@ -54,10 +55,11 @@ def print_handler(msg):
         message_logs.pop(0)
     message_logs.append(msg)
 
-def progressbar_handler(percent):
-    global cur_progress
-    cur_progress = percent
-    socketio.emit('checking_progress', cur_progress)
+def progressbar_handler(cur, total):
+    global cur_progress, total_progress
+    cur_progress = cur
+    total_progress = total
+    socketio.emit('checking_progress', {'cur': cur_progress, 'total': total_progress})
 
 def stop_thread(_thread):
     _async_raise(_thread.ident, SystemExit)
@@ -88,7 +90,7 @@ def background_thread_check():
         printer.errprint("Exception message : %s" % ex_value)
         printer.errprint("Stack trace : %s" % stack_trace)
         printer.errprint("检查意外结束")
-        progressbar.update(-100)
+        progressbar.update(0, 0)
     with thread_lock:
         print("线程结束")
         checker_thread = None
@@ -114,7 +116,7 @@ def download(filename):
 
 @socketio.on('connect')
 def on_connect():
-    global cur_progress, dic_min_error_rev, checker_thread, thread_lock
+    global cur_progress, total_progress, dic_min_error_rev, checker_thread, thread_lock
 
     print('Client connected\n')
     for log in message_logs:
@@ -126,7 +128,7 @@ def on_connect():
             checker_state = 1
 
     checker_list = main.get_checker_name_list()
-    progressbar.update(cur_progress)
+    progressbar.update(cur_progress, total_progress)
     data = {'checker_list': checker_list, 'checker_state': checker_state, 'dic_err_revs': dic_min_error_rev}
     emit('ack_init_data', data)
 
@@ -143,7 +145,7 @@ def on_stop_check():
             stop_thread(checker_thread)
             checker_thread = None
             socketio.emit('checker_state', 0)
-            progressbar.update(-100)
+            progressbar.update(0, 0)
         else:
             printer.errprint('后台并没有正在自检\n')
 
