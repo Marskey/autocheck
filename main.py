@@ -19,13 +19,13 @@ checker_mgr = CheckerMgr()
 def do_auto_check(dic_min_rev):
     dic_min_rev_error = {}
     rev_start = config.get_check_revision_start()
-    rev_end   = 3837
+    rev_end   = 'head'
     check_names = get_checker_name_list()
 
     progressbar.set_total(1)
     # 更新代码
     printer.aprint('更新代码...')
-    #rev_end = source_controller.updateTo(rev_end)
+    rev_end = source_controller.updateTo(rev_end)
     progressbar.add(1)
     printer.aprint('已更新代码至r{0}'.format(rev_end))
 
@@ -51,14 +51,15 @@ def do_check(rev_start, rev_end, checker_name) -> int:
 
     total_prog = len(changed_files)
     ignore_files = []
-    excluded_path  = "/ThirdParty/"
+    excluded_paths  = "/ThirdParty/;/libProto/;/ProtoCommon/".split(';')
     for file_name in changed_files:
-        if excluded_path in file_name:
-            ignore_files.append(file_name)
+        for excluded_path in excluded_paths:
+            if excluded_path in file_name:
+                ignore_files.append(file_name)
 
     for ignore_file in ignore_files:
         if ignore_file in changed_files:
-            changed_files.remove(ignore_file)
+            changed_files.pop(ignore_file)
 
     total_prog = total_prog + len(changed_files)
     # 总数乘以2是因为要先准备一次文件
