@@ -14,7 +14,6 @@ import hashlib
 class PVSStudioChecker(IChecker):
     CONST_TABLE_NAME = "pvs_reports"
     excludedCodes = []
-    excludedPath  = "/ThirdParty/"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -94,7 +93,7 @@ class PVSStudioChecker(IChecker):
         res = db.execute("select json_data from " + self.CONST_TABLE_NAME + "_config", [], False, False)
         raw_jason_data = ""
         if len(res) == 0:
-            defaultData = '{"excludedCodes":"V001 V108 V122 V126 V201 V202 V203 V2001 V2002 V2003 V2004 V2005 V2006 V2007 V2008 V2009 V2010 V2011 V2012 V2013 V2501 V2502 V2503 V2504 V2505 V2506 V2507 V2508 V2509 V2510 V2511 V2512 V2513 V2514 V2515 V2516 V2517 V2518 V2519 V2520 V2521 V2522 V2523 V2524 V2525 V820 V802 V112 V807"}'
+            defaultData = '{"excludedCodes":"V001 V104 V106 V108 V122 V126 V201 V202 V203 V2001 V2002 V2003 V2004 V2005 V2006 V2007 V2008 V2009 V2010 V2011 V2012 V2013 V2501 V2502 V2503 V2504 V2505 V2506 V2507 V2508 V2509 V2510 V2511 V2512 V2513 V2514 V2515 V2516 V2517 V2518 V2519 V2520 V2521 V2522 V2523 V2524 V2525 V820 V802 V112 v807"}'
             self.set_config(defaultData)
             raw_jason_data = defaultData
         else:
@@ -132,9 +131,6 @@ class PVSStudioChecker(IChecker):
     def __gen_src_filters(self, changes):
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
         for file_path, logs in changes.items():
-            if self.excludedPath in file_path:
-                continue
-
             xmlRoot = etree.Element('SourceFilesFilters')
             source_files = etree.SubElement(xmlRoot, 'SourceFiles')
             path = etree.SubElement(source_files, 'Path')
@@ -241,12 +237,16 @@ class PVSStudioChecker(IChecker):
                 if has_error:
                     plogXmlRoot = etree.parse(output_file_path)
                     analysisLogs = plogXmlRoot.findall('PVS-Studio_Analysis_Log')
+                    ignoreCnt = 0
                     for analysisLog in analysisLogs:
-                        if analysisLog.find('ErrorCode').text in self.excludedCodes:
-                            analysisLogs.remove(analysisLog)
+                        errCode = analysisLog.find('ErrorCode').text
+                        if errCode is None:
+                            continue
+                        if errCode.lower() in (code.lower() for code in self.excludedCodes):
                             plogXmlRoot.getroot().remove(analysisLog)
+                            ignoreCnt = ignoreCnt + 1
 
-                    if len(analysisLogs) == 0:
+                    if len(analysisLogs) == ignoreCnt:
                         os.remove(output_file_path)
                         progressbar.add(1)
                         if min_rev_has_error > cur_file_min_rev:
