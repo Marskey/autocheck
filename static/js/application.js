@@ -124,7 +124,7 @@ $(document).ready(function(){
             row += "<br> "
             row += "<a href='" + value.report_path + "?local_dir=" + $("#local_src_dir").val() + "'>下载原报告文件</a>"
             row += "<br> "
-            row += "<a href=''>忽略</a>"
+            row += "<a onclick='ignore_report(this, \"" + value.file_path + "\")'>忽略</a>"
             row += "</td>"
 
             // newline
@@ -185,6 +185,7 @@ $(document).ready(function(){
     })
 
     InterValObj = window.setInterval(show_left_time, 1000);
+
     function show_left_time() {
         // // 9, 12, 15, 18, 21
         // var left_sec = 0;
@@ -431,4 +432,10 @@ function getCookie(name)
     return unescape(arr[2]);
     else
     return null;
+}
+
+function ignore_report(self, file_path) {
+    socket.emit('ignore_report', $("#checker_selector").val(), file_path)
+    self.closest("tr").nextElementSibling.remove()
+    self.closest("tr").remove()
 }

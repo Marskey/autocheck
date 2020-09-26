@@ -32,6 +32,10 @@ class CheckerMgr:
         if name in checkers:
             checkers[name].set_config(json_data)
 
+    def ignore_report(self, name, file_path):
+        if name in checkers:
+            checkers[name].ignore_report(file_path)
+
     def __register_checker(self, IChecker):
         global checkers
         checkers[IChecker.get_name()] = IChecker

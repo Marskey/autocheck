@@ -49,7 +49,6 @@ def do_check(rev_start, rev_end, checker_name) -> int:
     progressbar.add(1)
     printer.aprint('获取区间版本r{0}至r{1}的差异文件完成'.format(rev_start, rev_end))
 
-    total_prog = len(changed_files)
     ignore_files = []
     excluded_paths  = "/ThirdParty/;/libProto/;/ProtoCommon/".split(';')
     for file_name in changed_files:
@@ -60,10 +59,6 @@ def do_check(rev_start, rev_end, checker_name) -> int:
     for ignore_file in ignore_files:
         if ignore_file in changed_files:
             changed_files.pop(ignore_file)
-
-    total_prog = total_prog + len(changed_files)
-    # 总数乘以2是因为要先准备一次文件
-    progressbar.set_total(total_prog)
 
     # 检查代码
     printer.aprint('检查r{0}至r{1}代码中...'.format(rev_start, rev_end))
@@ -97,3 +92,6 @@ def get_checker_config(checker_name):
 
 def set_checker_config(checker_name, json_data):
     return checker_mgr.set_checker_config(checker_name, json_data)
+
+def ignore_report(checker_name, file_path):
+    return checker_mgr.ignore_report(checker_name, file_path)

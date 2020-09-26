@@ -166,6 +166,10 @@ def get_checker_config(checker_name):
     data = main.get_checker_config(checker_name)
     emit('ack_get_checker_config', data)
 
+@socketio.on('ignore_report')
+def ignore_report(checker_name, file_path):
+    main.ignore_report(checker_name, file_path)
+
 @socketio.on('set_checker_config')
 def set_checker_config(checker_name, json_data):
     data = main.set_checker_config(checker_name, json_data)

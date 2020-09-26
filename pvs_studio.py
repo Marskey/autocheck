@@ -20,6 +20,8 @@ class PVSStudioChecker(IChecker):
         db = EasySqlite('rfp.db')
         db.execute("create table if not exists " + self.CONST_TABLE_NAME +
                    "(project text NOT NULL, file text, file_path text, time timestamp default current_timestamp not null, report_path text, log text); ")
+        db.execute("create table if not exists " + self.CONST_TABLE_NAME + "_ignore " +
+                   "(rev integer, project text NOT NULL, file text, file_path text, time timestamp default current_timestamp not null, report_path text, log text); ")
         db.execute("CREATE VIRTUAL TABLE if not exists " +
                    self.CONST_TABLE_NAME + "_fts USING fts4(file_path, body);")
         db.execute("create table if not exists " + self.CONST_TABLE_NAME + "_config"
@@ -74,7 +76,7 @@ class PVSStudioChecker(IChecker):
                     self.__convert_to_html(report_path)
 
             rev_list.append({
-                "project": project, "file": file_name, "time": time, "html_path": html_file_path, "report_path": "download\\" + report_path, "log": [log]
+                "project": project, "file": file_name, "file_path": file_path, "time": time, "html_path": html_file_path, "report_path": "download\\" + report_path, "log": [log]
             })
 
         return rev_list
@@ -109,6 +111,15 @@ class PVSStudioChecker(IChecker):
         db.execute("insert into " + self.CONST_TABLE_NAME + "_config values(?)", [json_data], False, True)
         self.excludedCodes = json.loads(json_data)["excludedCodes"].split()
 
+    def ignore_report(self, file_path):
+        db = EasySqlite('rfp.db')
+        row = db.execute("select * from " + self.CONST_TABLE_NAME + " where file_path = ? limit 1", [file_path], False, True)[0]
+        #db.execute("delete from " + self.CONST_TABLE_NAME + " where file_path = ?", [file_path], False, True)
+        logJsonData = json.loads(row[5])
+        db.execute("insert into "
+                   + self.CONST_TABLE_NAME + "_ignore "
+                   + " values (?, ?, ?, ?, ?, ?, ?);", (int(logJsonData['rev']), row[0], row[1], row[2], row[3], row[4], row[5]), False, True)
+
     # 转换plog成html格式
     def __convert_to_html(self, plog_path) -> bool:
         os.system("if not exist {0} mkdir {0}".format(
@@ -129,6 +140,7 @@ class PVSStudioChecker(IChecker):
         return True
 
     def __gen_src_filters(self, changes):
+        progressbar.set_total(len(changes))
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
         for file_path, logs in changes.items():
             xmlRoot = etree.Element('SourceFilesFilters')
@@ -150,6 +162,7 @@ class PVSStudioChecker(IChecker):
             tree = etree.ElementTree(xmlRoot)
             tree.write(
                 "temp/{0}.xml".format(hashlib.sha1(file_path.encode()).hexdigest()), encoding='utf-8')
+            progressbar.add(1)
 
     def __gen_plog(self):
         # 最早一个拥有错误的版本，用来以后检查的起始点
@@ -158,6 +171,7 @@ class PVSStudioChecker(IChecker):
             config.get_dir_pvs_plogs()))
         db = EasySqlite('rfp.db')
         for parent, dirnames, filenames in os.walk("temp",  followlinks=True):
+            progressbar.set_total(len(filenames))
             for file in filenames:
                 file_path = os.path.join(parent, file)
                 filename = os.path.splitext(file)[0]
@@ -241,6 +255,7 @@ class PVSStudioChecker(IChecker):
                     for analysisLog in analysisLogs:
                         errCode = analysisLog.find('ErrorCode').text
                         if errCode is None:
+                            progressbar.add(1)
                             continue
                         if errCode.lower() in (code.lower() for code in self.excludedCodes):
                             plogXmlRoot.getroot().remove(analysisLog)
