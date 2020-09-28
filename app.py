@@ -190,7 +190,7 @@ def auto_check():
     global thread_lock, checker_thread
     with thread_lock:
         if checker_thread is None:
-            printer.aprint('立即检查\n')
+            printer.aprint('定时检查开始\n')
             socketio.emit('checker_state', 1)
             print("定时启动\n")
             checker_thread = socketio.start_background_task(target=background_thread_check)
@@ -219,17 +219,17 @@ def load_min_err_rev_dic():
 def init():
     printer.set_handler(print_handler)
     progressbar.set_handler(progressbar_handler)
-    scheduler = BackgroundScheduler()
+    scheduler = BackgroundScheduler(daemon=True)
 
     load_min_err_rev_dic()
     
-    # job = scheduler.get_job("auto_check")
-    # if job is not None:
-    #     scheduler.remove_job("auto_check")
-    # # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
-    # job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21', id="auto_check")
+    job = scheduler.get_job("auto_check")
+    if job is not None:
+        scheduler.remove_job("auto_check")
+    # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
+    job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21, 24', id="auto_check")
     scheduler.start()
 
 if __name__ == '__main__':
     init()
-    socketio.run(app, debug=True, host="0.0.0.0", port=5001)
+    socketio.run(app, debug=False, host="0.0.0.0", port=5001)

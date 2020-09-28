@@ -34,11 +34,11 @@ class PVSStudioChecker(IChecker):
     def check(self, changed_files) -> int:
         # 生成要检查源码文件集合的xml文件
         printer.aprint('准备文件中...')
-        self.__gen_src_filters(changed_files)
+        max_rev = self.__gen_src_filters(changed_files)
         # 生成检查结果plog格式
         printer.aprint(self.get_name() + '生成plog...')
         # 返回有错误的最小版本号
-        return self.__gen_plog()
+        return self.__gen_plog(max_rev)
 
     def get_result(self, offset, count, search) -> list:
         rev_list = []
@@ -114,7 +114,7 @@ class PVSStudioChecker(IChecker):
     def ignore_report(self, file_path):
         db = EasySqlite('rfp.db')
         row = db.execute("select * from " + self.CONST_TABLE_NAME + " where file_path = ? limit 1", [file_path], False, True)[0]
-        #db.execute("delete from " + self.CONST_TABLE_NAME + " where file_path = ?", [file_path], False, True)
+        db.execute("delete from " + self.CONST_TABLE_NAME + " where file_path = ?", [file_path], False, True)
         logJsonData = json.loads(row[5])
         db.execute("insert into "
                    + self.CONST_TABLE_NAME + "_ignore "
@@ -140,6 +140,7 @@ class PVSStudioChecker(IChecker):
         return True
 
     def __gen_src_filters(self, changes):
+        max_rev = 0
         progressbar.set_total(len(changes))
         os.system("if not exist temp ( mkdir temp ) else ( del /s/q temp )")
         for file_path, logs in changes.items():
@@ -154,6 +155,9 @@ class PVSStudioChecker(IChecker):
                 logXml = etree.SubElement(logsXml, 'log')
                 logXml.set('rev', log['rev'])
                 logXml.set('author', log['author'])
+                file_rev = int(log['rev'])
+                if file_rev > max_rev:
+                    max_rev = file_rev
                 if log['msg'] != None:
                     logXml.set('msg', log['msg'])
                 else:
@@ -163,10 +167,11 @@ class PVSStudioChecker(IChecker):
             tree.write(
                 "temp/{0}.xml".format(hashlib.sha1(file_path.encode()).hexdigest()), encoding='utf-8')
             progressbar.add(1)
+        return max_rev
 
-    def __gen_plog(self):
+    def __gen_plog(self, max_rev):
         # 最早一个拥有错误的版本，用来以后检查的起始点
-        min_rev_has_error = 9999999
+        min_rev_has_error = max_rev
         os.system("if not exist {0} mkdir {0}".format(
             config.get_dir_pvs_plogs()))
         db = EasySqlite('rfp.db')
@@ -248,6 +253,8 @@ class PVSStudioChecker(IChecker):
                 db.execute("delete from " + self.CONST_TABLE_NAME + "_fts where file_path = ?", [src_path], False, True
                            )
 
+                # 更新进度条用
+                progressbar.add(1)
                 if has_error:
                     plogXmlRoot = etree.parse(output_file_path)
                     analysisLogs = plogXmlRoot.findall('PVS-Studio_Analysis_Log')
@@ -263,9 +270,6 @@ class PVSStudioChecker(IChecker):
 
                     if len(analysisLogs) == ignoreCnt:
                         os.remove(output_file_path)
-                        progressbar.add(1)
-                        if min_rev_has_error > cur_file_min_rev:
-                            min_rev_has_error = cur_file_min_rev
                         continue
 
                     plogXmlRoot.write(output_file_path)
@@ -274,11 +278,18 @@ class PVSStudioChecker(IChecker):
                     filename = analysisLogs[0].find('ShortFile').text
                     log_str = json.dumps(log_json)
 
+                    res_ignore = db.execute("select * from " + self.CONST_TABLE_NAME + "_ignore"
+                                           + " where rev=? and project=? and file=?", (cur_file_min_rev, project, filename))
+                    if len(res_ignore) != 0:
+                        os.remove(output_file_path)
+                        continue
+
+                    if min_rev_has_error > cur_file_min_rev:
+                        min_rev_has_error = cur_file_min_rev
+
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
                                + " values (?, ?, ?, current_timestamp, ?, ?);", (project, filename, src_path, output_file_path, log_str), False, True)
-                    if min_rev_has_error > cur_file_min_rev:
-                        min_rev_has_error = cur_file_min_rev
 
                     body_str = '{0} {1} {2}'.format(project, filename, log_str)
                     db.execute("insert into "
@@ -288,11 +299,7 @@ class PVSStudioChecker(IChecker):
                     printer.aprint(self.get_name() +
                                    '生成 {0} 的网页报告...'.format(src_path))
                     self.__convert_to_html(output_file_path)
-                else:
-                    min_rev_has_error = cur_file_min_rev
 
-                # 更新进度条用
-                progressbar.add(1)
                 printer.aprint(self.get_name() + '文件{0}检查结束'.format(src_path))
 
         return min_rev_has_error
