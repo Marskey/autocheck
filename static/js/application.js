@@ -429,12 +429,15 @@ function getCookie(name)
 {
     var arr,reg=new RegExp("(^| )"+name+"=([^;]*)(;|$)");
     if(arr=document.cookie.match(reg))
-    return unescape(arr[2]);
+        return unescape(arr[2]);
     else
     return null;
 }
 
 function ignore_report(self, file_path) {
+    if (!confirm("确定要忽略？ " + file_path)) {
+        return
+    }
     socket.emit('ignore_report', $("#checker_selector").val(), file_path)
     self.closest("tr").nextElementSibling.remove()
     self.closest("tr").remove()

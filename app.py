@@ -227,7 +227,7 @@ def init():
     if job is not None:
         scheduler.remove_job("auto_check")
     # 定时9点， 12点， 15点， 18点， 21点的时候开始检查。
-    job = scheduler.add_job(auto_check, 'cron', hour='9, 12, 15, 18, 21, 24', id="auto_check")
+    job = scheduler.add_job(auto_check, 'cron', hour='6, 12, 15, 18, 21', id="auto_check")
     scheduler.start()
 
 if __name__ == '__main__':
