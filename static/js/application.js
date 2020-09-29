@@ -77,7 +77,7 @@ $(document).ready(function(){
             $('.progress-bar').css('width', percent + '%');
         }
 
-        if (percent == 100) {
+        if (percent >= 100) {
             var progressbar_color = "progress-bar-success"
             var board_color = "#5cb85c"
 
