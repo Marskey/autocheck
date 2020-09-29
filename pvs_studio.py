@@ -262,7 +262,6 @@ class PVSStudioChecker(IChecker):
                     for analysisLog in analysisLogs:
                         errCode = analysisLog.find('ErrorCode').text
                         if errCode is None:
-                            progressbar.add(1)
                             continue
                         if errCode.lower() in (code.lower() for code in self.excludedCodes):
                             plogXmlRoot.getroot().remove(analysisLog)
