@@ -120,6 +120,10 @@ class PVSStudioChecker(IChecker):
                    + self.CONST_TABLE_NAME + "_ignore "
                    + " values (?, ?, ?, ?, ?, ?, ?);", (int(logJsonData['rev']), row[0], row[1], row[2], row[3], row[4], row[5]), False, True)
 
+    def resolved(self, file_path):
+        db = EasySqlite('rfp.db')
+        db.execute("delete from " + self.CONST_TABLE_NAME + " where file_path = ?", [file_path], False, True)
+
     # 转换plog成html格式
     def __convert_to_html(self, plog_path) -> bool:
         os.system("if not exist {0} mkdir {0}".format(

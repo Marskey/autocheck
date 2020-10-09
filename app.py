@@ -170,6 +170,10 @@ def get_checker_config(checker_name):
 def ignore_report(checker_name, file_path):
     main.ignore_report(checker_name, file_path)
 
+@socketio.on('resolved')
+def resolved(checker_name, file_path):
+    main.resolved(checker_name, file_path)
+
 @socketio.on('set_checker_config')
 def set_checker_config(checker_name, json_data):
     data = main.set_checker_config(checker_name, json_data)

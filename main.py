@@ -95,3 +95,6 @@ def set_checker_config(checker_name, json_data):
 
 def ignore_report(checker_name, file_path):
     return checker_mgr.ignore_report(checker_name, file_path)
+
+def resolved(checker_name, file_path):
+    return checker_mgr.resolved(checker_name, file_path)
