@@ -237,7 +237,7 @@ class PVSStudioChecker(IChecker):
                     has_error = False
                 print("pvs-studio ret: " + str(ret))
 
-                cur_file_min_rev = 9999999
+                cur_file_max_rev = 0
                 logs_json = []
                 logsRoot = xmlRoot.find('logs')
                 for log in logsRoot.iter('log'):
@@ -246,8 +246,8 @@ class PVSStudioChecker(IChecker):
                         }
                     logs_json.append(log_json)
                     revision = int(log.attrib["rev"])
-                    if cur_file_min_rev > revision:
-                        cur_file_min_rev = revision
+                    if cur_file_max_rev < revision:
+                        cur_file_max_rev = revision
 
                 db.execute("delete from "
                            + self.CONST_TABLE_NAME
@@ -282,13 +282,17 @@ class PVSStudioChecker(IChecker):
                     log_str = json.dumps(log_json)
 
                     res_ignore = db.execute("select * from " + self.CONST_TABLE_NAME + "_ignore"
-                                           + " where rev=? and project=? and file=?", (cur_file_min_rev, project, filename))
+                                           + " where rev=? and project=? and file=?", (cur_file_max_rev, project, filename), False, False)
+                    if filename == 'Dump.cpp':
+                        if len(res_ignore) == 0:
+                            print("Dump cannot find", cur_file_max_rev, project, filename)
+
                     if len(res_ignore) != 0:
                         os.remove(output_file_path)
                         continue
 
-                    if min_rev_has_error > cur_file_min_rev:
-                        min_rev_has_error = cur_file_min_rev
+                    if min_rev_has_error < cur_file_max_rev:
+                        min_rev_has_error = cur_file_max_rev
 
                     db.execute("insert into "
                                + self.CONST_TABLE_NAME
